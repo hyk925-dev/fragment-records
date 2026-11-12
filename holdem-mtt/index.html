@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>홀덤 토너먼트 문제풀이</title>
+<style>
+:root{
+  --bg:#111315; --card:#1A1D21; --card2:#22262B; --ink:#ECEDEA; --ink2:#A9AEB4; --ink3:#767C83;
+  --rule:#2F343A; --red:#FF6B70; --good:#4CC38A; --bad:#FF6B70; --warn:#E8C25A; --accent:#7FB3FF;
+  --sans:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{max-width:640px;margin:0 auto;padding:16px 14px 72px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.reset{background:transparent;border:1px solid var(--rule);color:var(--ink2);border-radius:10px;padding:8px 12px;font-size:13px;min-height:40px;flex:none}
+.prog{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin-bottom:10px}
+.tag{background:var(--card2);border:1px solid var(--rule);border-radius:999px;padding:2px 10px;color:var(--ink)}
+.bar{height:4px;background:var(--card2);border-radius:4px;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:14px}
+.panel+.panel{margin-top:12px}
+.game{font-size:13.5px;color:var(--ink2)}
+.game b{color:var(--ink);font-weight:600}
+dl.facts{margin:10px 0 0;display:grid;gap:8px}
+dl.facts div{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:start}
+dl.facts dt{font-size:12px;color:var(--ink3);padding-top:3px}
+dl.facts dd{margin:0;min-width:0}
+.vil{display:block}
+.vil+.vil{margin-top:4px}
+.act{margin:0;padding-left:18px;font-size:14.5px}
+.act li+li{margin-top:3px}
+.cards{display:inline-flex;flex-wrap:wrap;gap:4px;vertical-align:middle}
+.c{display:inline-block;font:700 1em/1 var(--mono);padding:2px 4px;border-radius:5px;background:#F4F4F1;color:#16181B;white-space:nowrap}
+.c.r{color:#D0202D}
+.big .c{font-size:22px;padding:8px 8px;min-width:46px;text-align:center;border-radius:7px}
+.street{display:inline-flex;gap:4px}
+.street+.street{margin-left:8px}
+.q{font-size:17px;font-weight:600;margin:16px 2px 12px;line-height:1.5}
+.choices{display:grid;gap:10px}
+.choice{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card2);border:1.5px solid var(--rule);border-radius:12px;padding:12px 14px;min-height:54px;font-size:15.5px}
+.choice .k{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--bg);font-size:13px;color:var(--ink2)}
+.choice:not([disabled]):active{border-color:var(--accent)}
+.choice[disabled]{cursor:default}
+.choice.ok{border-color:var(--good);background:#1C2E25}
+.choice.ok .k{background:var(--good);color:#0D1A13}
+.choice.no{border-color:var(--bad);background:#2F1D1F}
+.choice.no .k{background:var(--bad);color:#2A0D0F}
+.choice.dim{opacity:.55}
+.verdict{margin:16px 2px 8px;font-size:20px;font-weight:700}
+.verdict.ok{color:var(--good)} .verdict.no{color:var(--bad)}
+.split{border:1px solid var(--warn);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:14px;margin:8px 0 4px}
+.ex h3{font-size:13px;color:var(--ink3);margin:0 0 4px;font-weight:600;letter-spacing:.02em}
+.ex p{margin:0;font-size:15px;color:var(--ink)}
+.ex .calc p{font-variant-numeric:tabular-nums}
+.ex section+section{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule)}
+.next{display:block;width:100%;margin-top:16px;background:var(--accent);color:#0B1726;border:0;border-radius:12px;min-height:54px;font-size:16.5px;font-weight:700}
+.note{font-size:12.5px;color:var(--ink3);margin-top:18px;line-height:1.55}
+table.score{width:100%;border-collapse:collapse;font-size:15px}
+table.score td{padding:9px 4px;border-bottom:1px solid var(--rule);vertical-align:middle}
+table.score td.n{font:700 15px var(--mono);text-align:right;white-space:nowrap;width:52px}
+.pips{display:inline-flex;gap:4px;vertical-align:middle}
+.pips i{width:14px;height:14px;border-radius:4px;background:var(--card2);border:1px solid var(--rule)}
+.pips i.on{background:var(--good);border-color:var(--good)}
+.weak{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.weak li{background:var(--card2);border-radius:10px;padding:10px 12px;font-size:14.5px}
+.weak b{display:block;margin-bottom:2px}
+.total{font-size:28px;font-weight:800;margin:4px 0 2px}
+h2{font-size:18px;margin:0 0 10px}
+.hbtns{display:flex;gap:6px;flex:none}
+.ex section.mistake h3{color:var(--warn)}
+.intro{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.intro li{font-size:15px;line-height:1.6}
+.intro b{display:block;color:var(--accent);font-size:15.5px;margin-bottom:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>홀덤 토너먼트 문제풀이</h1>
+    <span class="hbtns"><button class="reset" id="intro" type="button" hidden>한 장</button><button class="reset" id="reset" type="button">처음부터</button></span>
+  </header>
+  <main id="app"></main>
+  <p class="note">펍 토너먼트(MTT) 기준 — 9인 테이블, BB 앤티(빅블라인드가 앤티 1BB 를 낸다), 스택은 전부 BB 로 센다. 푸시폴드 판단은 &#x27;널리 쓰이는 푸시폴드(Nash) 차트&#x27; 기준이며 경계가 아닌 분명한 핸드로만 냈다. 상대 레인지는 전부 &#x27;가정&#x27;이다. ICM 은 Malmuth-Harville 단순화 모델(블라인드·앤티와 다음 판 이후를 무시)이라 실제 ICM 계산기와 몇 %p 다를 수 있다. 모든 수(팟·팟오즈·에퀴티·접는 몫·올인 EV·ICM)는 7장 평가기와 ICM 계산기로 다시 계산해 대조했다.</p>
+</div>
+<script>
+// 채점·보충 문제 선택 — 순수 함수. build_quiz.py 가 이 파일을 «그대로» quiz.html 에 인라인하고,
+// _quiztest.js 가 같은 파일을 require 해서 시험한다(시험한 코드 = 배포한 코드).
+
+// 한 문제 채점: 허용 답 중 하나면 1점 (정답이 둘인 문제도 1점).
+function isCorrect(q, pick) {
+  return q.answers.indexOf(pick) !== -1;
+}
+
+// 영역별 점수와 만점. questions = 본 문제 목록, picks = {문제id: 고른 선택지 번호}
+function areaScores(questions, picks) {
+  const score = {}, full = {};
+  for (const q of questions) {
+    full[q.area] = (full[q.area] || 0) + 1;
+    score[q.area] = (score[q.area] || 0) + (isCorrect(q, picks[q.id]) ? 1 : 0);
+  }
+  return { score, full };
+}
+
+// 약한 영역 순서: 점수 낮은 순, 동점이면 영역 번호 순. 만점 영역은 빠진다.
+function weakAreas(sc) {
+  return Object.keys(sc.full).map(Number)
+    .filter(a => sc.score[a] < sc.full[a])
+    .sort((a, b) => (sc.score[a] - sc.score[b]) || (a - b));
+}
+
+// 보충 n문제 고르기.
+//  - 전부 만점이면: 풀에서 가장 어려운 n (level 높은 순으로 뽑아, 쉬운→어려운 순으로 낸다)
+//  - 아니면: 영역을 (점수 낮은 순, 동점이면 영역 번호 순)으로 줄 세우고, 앞 영역부터 그 영역 문제를 level 순으로 채운다.
+//    만점 영역도 줄 뒤쪽(영역 번호 순)에 남아 있어 약한 영역 문제가 n 보다 적으면 거기서 채운다.
+function pickSupplement(sc, pool, n) {
+  n = n || 5;
+  const areas = Object.keys(sc.full).map(Number);
+  const allPerfect = areas.every(a => sc.score[a] >= sc.full[a]);
+  if (allPerfect) {
+    return pool.slice().sort((a, b) => b.level - a.level).slice(0, n)
+      .sort((a, b) => a.level - b.level).map(q => q.id);
+  }
+  const order = areas.slice().sort((a, b) => (sc.score[a] - sc.score[b]) || (a - b));
+  const out = [];
+  for (const a of order) {
+    const qs = pool.filter(q => q.area === a).sort((x, y) => x.level - y.level);
+    for (const q of qs) if (out.length < n) out.push(q.id);
+  }
+  return out;
+}
+
+if (typeof module !== "undefined") module.exports = { isCorrect, areaScores, weakAreas, pickSupplement };
+
+</script>
+<script>
+const D = {"version": "bb52eebc95", "storage": "holdem-mtt-quiz-", "labels": {"why": "왜 이게 답인가", "calc": "계산", "mistake": "캐시 습관이면 어떻게 틀리나", "if_changes": "상대·스택이 바뀌면"}, "suppNote": "보충 5문제는 약한 영역부터 뽑았다 (점수 낮은 순, 같으면 영역 번호 순). 본 문제보다 한 단계 어렵다 — 리스틸 EV·버블 ICM·리버 올인 포함.", "intro": [{"head": "캐시 = 적게 자주, 토너 = 크게 가끔", "body": "캐시는 칩이 곧 돈이고 언제든 다시 살 수 있어 작은 이득을 자주 쌓는다. 토너는 한 번 다 잃으면 끝이고 블라인드가 계속 오른다 — 작은 이득을 기다릴 시간이 없다."}, {"head": "스택은 칩이 아니라 BB 로 센다", "body": "내 칩 ÷ 빅블라인드. 60BB 이상이면 캐시와 비슷하게, 25~40BB 면 작은 오픈과 3벳 중심, 15~25BB 면 올인 리스틸이 주무기, 15BB 아래면 올인 아니면 폴드."}, {"head": "기다리면 녹는다", "body": "앉아만 있어도 한 바퀴마다 SB + BB + 앤티가 나간다. 칩 수가 그대로여도 레벨이 오르면 BB 로는 줄어든다. 좋은 패만 기다리면 좋은 패가 왔을 때 칩이 없다."}, {"head": "먼저 친다", "body": "남이 오픈한 팟에 콜로 들어가기보다 내가 먼저 레이즈하거나 올인한다. 먼저 치면 상대가 접어서 이기는 길이 하나 더 생긴다. 남의 올인을 콜할 땐 그 길이 없으니 더 좋은 패가 필요하다."}, {"head": "앤티 팟은 훔칠 가치가 크다", "body": "BB 앤티가 있으면 아무도 안 들어온 팟에 2.5BB 가 깔려 있다. 오픈은 2~2.3배로 작게, 늦은 자리에선 넓게. BB 에서 지킬 때도 앤티 덕에 생각보다 싸다."}, {"head": "크게 먹는다 = 폴라", "body": "크게 벳할 땐 &#x27;아주 강한 패&#x27; 아니면 &#x27;블러프&#x27;. 두 번째 페어 같은 중간 패는 체크해서 싸게 본다. 캐시식 얇은 밸류벳은 줄인다."}, {"head": "애매하면 접는다 — 특히 버블", "body": "상금 바로 앞(버블)에선 칩을 잃는 아픔이 따는 기쁨보다 크다(ICM). 반반짜리 올인 콜은 접는다. 내가 큰 스택이면 반대로 그 점을 이용해 압박한다."}, {"head": "스택이 적을수록 단순하게", "body": "15~20BB 아래로 내려가면 &#x27;올인 아니면 폴드&#x27;. 오픈했다가 리레이즈에 접는 건 칩만 버린다. 팟에 비해 스택이 작으면 톱페어도 끝까지 간다."}], "areas": {"1": {"name": "스택·단계", "tip": "칩 ÷ BB 로 단계를 읽는다(60BB+ / 25~40 / 15~25 / 15 이하). 한 바퀴 비용 = SB + BB + 앤티 — 기다리면 녹는다. 상대와의 게임 크기는 작은 쪽 스택(유효 스택)."}, "2": {"name": "앤티·스틸·방어", "tip": "앤티 팟엔 2.5BB 가 깔려 있다. 오픈은 2~2.3배, 늦은 자리일수록 넓게 훔친다. BB 방어는 앤티까지 넣은 팟오즈로 — 생각보다 싸다."}, "3": {"name": "푸시폴드·숏스택", "tip": "15BB 아래는 올인 아니면 폴드. 먼저 올인하는 범위가 남의 올인을 콜하는 범위보다 넓다(갭). 콜은 필요 승률 = 콜 ÷ (콜 뒤 전체 팟)으로."}, "4": {"name": "ICM·버블", "tip": "칩 ≠ 돈. 버블에선 반반 올인 콜을 접고, 중간 스택이 가장 조심한다. 큰 스택은 그걸 이용해 압박한다. (여기 수는 단순화 ICM)"}, "5": {"name": "폴라·사이즈", "tip": "크게 벳할 땐 넛급 아니면 블러프, 중간 패는 체크. 블러프 몫 = B ÷ (P + 2B). 팟 대비 스택이 작으면(SPR 작음) 톱페어는 끝까지 간다."}}, "questions": [{"id": "M1", "set": "main", "area": 1, "level": 1, "game": "<b>중반<\/b> · 남은 45명 · 상금 6위까지 · <b>9인<\/b> · 블라인드 600/1200 앤티 1200 · 유효 스택 <b>22BB<\/b>", "heroPos": "HJ", "heroCards": "", "heroNote": "칩 26,400 — 손패보다 먼저 스택을 읽는 문제", "villains": ["<b>테이블<\/b> — 평범한 펍 토너 손님들 — 캐시처럼 콜이 많다"], "action": ["새 레벨이 막 시작됐다. 이번 판 카드는 아직 안 받았다."], "pot": "3,000 (판마다 깔리는 돈: SB + BB + 앤티)", "board": "", "question": "칩 26,400 ÷ 빅블라인드 1200 = 22BB. 이 스택에서 가장 맞는 계획은?", "choices": ["칩이 2만이 넘으니 넉넉하다 — 작은 페어·수딧 커넥터로 남의 오픈에 콜해 플랍을 본다", "15~25BB 구간 — 오픈은 작게, 남의 오픈엔 올인 리스틸이 주무기, 콜해서 플랍 보기는 줄인다", "15BB 아래 구간 — 이제부터 올인 아니면 폴드만", "깊은 스택처럼 — 3배 오픈하고 플랍 이후에 이긴다"], "answers": [1], "ex": {"why": "스택은 칩 수가 아니라 BB 로 센다. 26,400 ÷ 1200 = 22BB — 15~25BB 구간이다. 이 깊이에선 콜하고 플랍을 보면 남는 칩이 팟에 비해 작아서, 플랍 이후 기술을 쓸 공간이 없다. 그래서 오픈은 2배 안팎으로 작게, 남이 오픈하면 접거나 올인으로 되받는(리스틸) 두 갈래로 단순하게 간다.", "calc": "① 스택 = 26400 ÷ 1200 = 22BB<br>② 한 바퀴 비용 = SB 600 + BB 1200 + 앤티 1200 = 3,000 → 아무것도 안 하면 8.8 바퀴면 0<br>③ 다음 레벨(800/1600 앤티 1600)이면 같은 칩이 26400 ÷ 1600 = 16.5BB", "mistake": "캐시에선 칩이 줄지 않으면 스택도 그대로라 '좋은 패 올 때까지 기다리기'가 거의 공짜다. 토너에선 26,400 이 그대로여도 다음 레벨에 16.5BB 로 줄고, 앉아만 있어도 한 바퀴에 3,000 씩 녹는다. 칩 수를 보고 '넉넉하다'고 느끼는 것, 작은 페어로 콜해서 셋을 노리는 것이 캐시 습관이다 — 셋이 맞아도 따올 칩이 작다.", "if_changes": "같은 칩이 앞 레벨(400/800 앤티 800)이었다면 33BB — 25~40BB 구간이라 오픈·3벳·콜을 조금 더 섞을 수 있다. 반대로 한 레벨 뒤 16.5BB 면 15BB 문턱 근처라 올인/폴드 비중이 커진다. 나보다 작은 스택과 붙으면 그 사람과의 게임 크기는 그 사람 스택(유효 스택)이다."}}, {"id": "M2", "set": "main", "area": 1, "level": 2, "game": "<b>후반<\/b> · 남은 30명 · 상금 10위까지 · <b>9인<\/b> · 블라인드 2000/4000 앤티 4000 · 유효 스택 <b>14BB<\/b>", "heroPos": "CO", "heroCards": "", "heroNote": "칩 56,000 — 이번 판은 접었다. 다음 판들의 계획을 묻는 문제", "villains": ["<b>테이블<\/b> — 시작 칩 30,000 으로 90명이 참가 — 남은 30명이 그 칩을 나눠 가졌다"], "action": ["카드가 안 들어와 두 바퀴째 접고 있다."], "pot": "10,000 (판마다 깔리는 돈)", "board": "", "question": "평균 스택은 22.5BB, 내 스택은 14BB. 어떻게 가야 할까?", "choices": ["평균보다 적지만 칩이 5만이 넘는다 — 좋은 패가 올 때까지 기다린다", "버틸 수 있는 건 5.6 바퀴뿐 — 앞에서 아무도 안 들어온 팟은 좋은 자리에서 먼저 올인해 깔린 돈을 가져온다", "평균이 22.5BB 밖에 안 되니 다들 숏스택 — 캐시처럼 림프해서 싸게 플랍을 본다", "상금권까지 20명만 더 떨어지면 되니 폴드만 하며 버틴다"], "answers": [1], "ex": {"why": "펍 토너 후반엔 평균 스택 자체가 22.5BB 정도로 내려온다 — 깊은 스택 포스트플랍은 거의 안 나온다. 내 14BB 는 올인/폴드 구간이고, 한 바퀴에 10,000 씩 녹아 5.6 바퀴면 끝난다. 아무도 안 들어온 팟에 먼저 올인하면 깔린 2.5BB 를 자주 가져오는데, 한 번이 내 스택의 17.9% 다. 기다리는 동안 이 기회를 버리는 게 가장 비싸다.", "calc": "① 총 칩 = 30000 × 90 = 2,700,000 → 평균 = 2,700,000 ÷ 30 = 90,000 → 22.5BB<br>② 내 스택 = 56000 ÷ 4000 = 14BB<br>③ 한 바퀴 = 2000 + 4000 + 4000 = 10,000 → 56000 ÷ 10,000 = 5.6 바퀴<br>④ 아무도 안 들어온 팟 = 2.5BB = 내 스택의 17.9%", "mistake": "캐시에선 칩이 빠지는 속도가 느려서 '기다림'이 기본기다. 토너 후반엔 기다림이 곧 손실이다 — 접기만 하면 5.6 바퀴 뒤 0이고, 그 전에 10BB 아래로 내려가면 올인해도 상대를 접게 할 힘이 없다. 림프도 캐시 습관이다: 앤티 팟에서 림프하면 BB 가 공짜로 보고, 뒤에서 올인이 오면 접어야 한다.", "if_changes": "평균이 40BB 이상인 초반이라면 상대들이 깊어 내 올인에 콜이 많다 — 올인 범위를 조금 좁힌다. 상금권 직전(버블)에 나보다 작은 스택이 여럿 있으면 그들이 먼저 떨어질 수 있어 조금 더 기다릴 이유가 생긴다(영역 4). 상대들이 내 올인에 너무 자주 콜하는 테이블이면 강한 패 비중을 높인다."}}, {"id": "M3", "set": "main", "area": 2, "level": 3, "game": "<b>중반<\/b> · 남은 60명 · 상금 8위까지 · <b>9인<\/b> · 블라인드 500/1000 앤티 1000 · 유효 스택 <b>35BB<\/b>", "heroPos": "CO", "heroCards": "<span class=\"c\">A♠<\/span><span class=\"c r\">10♦<\/span>", "heroNote": "", "villains": ["<b>BTN·SB·BB<\/b> — 보통 — 셋 다 35BB 안팎"], "action": ["프리플랍: UTG~HJ 모두 폴드, 당신(CO) 차례."], "pot": "2.5BB (SB 0.5 + BB 1 + 앤티 1)", "board": "", "question": "<span class=\"cards\"><span class=\"c\">A♠<\/span><\/span><span class=\"cards\"><span class=\"c r\">10♦<\/span><\/span>. 얼마로 오픈할까?", "choices": ["3.5BB — 캐시처럼 3배에 앤티 몫을 더 얹는다", "2.2BB 안팎 — 작게 오픈한다", "림프(1BB) — 싸게 들어간다", "35BB 올인"], "answers": [1], "ex": {"why": "앤티가 있으면 아무도 안 들어온 팟에 이미 2.5BB 가 깔려 있다. 작은 오픈으로도 이 돈을 가져올 확률이 충분하고, 뒤에서 올인(리스틸)을 맞아 접을 때 버리는 칩이 적다. 토너 중반 스택(20~40BB)에서 2~2.3배 오픈이 표준이 된 이유다.", "calc": "① 깔린 팟 = 0.5 + 1 + 1 = 2.5BB<br>② 2.2BB 오픈이 바로 이익이려면 셋이 접어야 하는 몫 = 2.2 ÷ (2.5BB + 2.2) = 46.8%<br>③ 3.5BB 오픈이면 = 3.5 ÷ (2.5BB + 3.5) = 58.3%<br>④ 뒤에서 올인을 맞고 접을 때 잃는 칩: 스택의 6.3%(2.2BB) vs 10%(3.5BB)", "mistake": "캐시 100BB 에선 3배 오픈이 기본이고 리레이즈를 맞아도 스택에 여유가 있다. 35BB 에서 3.5BB 를 오픈하면 같은 팟을 훔치려고 칩을 더 걸고, BTN·블라인드의 올인 리스틸을 맞고 접을 때마다 스택의 10% 를 버린다. 림프는 BB 에게 공짜 플랍을 주고 뒤의 올인에 무방비다. 35BB 올인은 2.5BB 를 위해 스택 전부를 거는 것 — 나보다 강한 패만 콜하고 약한 패는 다 접는다.", "if_changes": "초반 60BB 이상으로 깊으면 2.5배까지 올려도 된다(플랍 이후가 길어 포지션 없는 콜을 덜 받고 싶다). BB 가 무엇이든 콜하는 사람이면 사이즈를 조금 올리거나 더 좋은 패로 오픈한다. 뒤에 15BB 안팎 숏스택이 있으면 그 사람의 올인에 콜할 수 있는 패로 오픈 범위를 맞춘다(영역 3)."}}, {"id": "M4", "set": "main", "area": 2, "level": 4, "game": "<b>중반<\/b> · 남은 40명 · 상금 8위까지 · <b>9인<\/b> · 블라인드 1000/2000 앤티 2000 · 유효 스택 <b>30BB<\/b>", "heroPos": "BB", "heroCards": "<span class=\"c\">K♣<\/span><span class=\"c r\">7♦<\/span>", "heroNote": "", "villains": ["<b>BTN<\/b> — 보통 — 늦은 자리에서 넓게 훔친다 (가정: 22+, A2+, K2s+, K7o+, Q5s+, Q9o+, J7s+, J9o+, T7s+, T9o, 97s+, 86s+, 75s+, 65s, 54s)"], "action": ["프리플랍: BTN 까지 폴드, BTN 2BB 오픈(민레이즈), SB 폴드, 당신(BB) 차례."], "pot": "4.5BB", "board": "", "question": "<span class=\"cards\"><span class=\"c\">K♣<\/span><\/span><span class=\"cards\"><span class=\"c r\">7♦<\/span><\/span>. 1BB 만 더 내면 된다. 어떻게?", "choices": ["폴드 — K7o 는 약하고 포지션도 없다", "콜", "30BB 올인", "6BB 로 리레이즈, 올인 오면 접는다"], "answers": [1], "ex": {"why": "앤티가 있으면 BB 방어가 매우 싸다. 팟 4.5BB 에 1BB 만 넣으면 되니 필요 승률은 18.2% 뿐인데, K7o 는 넓은 BTN 오픈 레인지 상대로 42% 를 가진다. 포지션이 없어 그 에퀴티를 다 살리지는 못해도, 차이가 커서 접으면 손해다.", "calc": "① 팟 = SB 0.5 + BB 1 + 앤티 1 + BTN 2 = 4.5BB<br>② 필요 승률 = 1 ÷ (4.5BB + 1) = 18.2%<br>③ K7o vs BTN 가정 레인지: 42% (몬테카를로)<br>④ 앤티가 없다면: 1 ÷ (3.5 + 1) = 22.2%", "mistake": "캐시에선 BTN 이 2.5~3배로 오픈하고 앤티가 없어 BB 가 낼 값이 비싸다 — 'K7o 같은 손은 포지션 없이 버린다'가 맞는 경우가 많다. 토너 앤티 팟에서 민레이즈를 맞으면 가격이 18.2% 까지 떨어진다. 캐시 기준으로 접으면 BTN 이 매 바퀴 공짜로 블라인드를 가져간다.", "if_changes": "BTN 이 3배로 오픈하는 타이트한 사람이면 가격도 비싸지고 레인지도 강해져 K7o 는 접는 쪽으로 기운다. 내 스택이 15BB 안팎이면 콜보다 올인 리스틸을 먼저 생각한다(영역 3). BTN 이 아무 두 장으로 훔치는 사람이면 K7o 로 리레이즈도 후보가 된다."}}, {"id": "M5", "set": "main", "area": 3, "level": 5, "game": "<b>후반<\/b> · 남은 25명 · 상금 10위까지 · <b>9인<\/b> · 블라인드 1500/3000 앤티 3000 · 유효 스택 <b>8BB<\/b>", "heroPos": "BTN", "heroCards": "<span class=\"c r\">A♥<\/span><span class=\"c r\">8♦<\/span>", "heroNote": "", "villains": ["<b>SB<\/b> — 30BB — 내 올인엔 거의 접는다 (가정: 이번엔 접는다)", "<b>BB<\/b> — 25BB — 내 올인에 이 패들로 콜 (가정: 22+, A2+, K7s+, KTo+, Q9s+, QJo, J9s+, T9s)"], "action": ["프리플랍: BTN 까지 모두 폴드, 당신(BTN) 차례. 스택 8BB."], "pot": "2.5BB", "board": "", "question": "<span class=\"cards\"><span class=\"c r\">A♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">8♦<\/span><\/span>, 8BB. 어떻게?", "choices": ["폴드 — 더 좋은 패를 기다린다", "림프 — 싸게 플랍을 본다", "올인", "3BB 오픈, 리레이즈 오면 접는다"], "answers": [2], "ex": {"why": "널리 쓰이는 푸시폴드(Nash) 차트 기준, BTN 8BB 에서 A8o 는 경계가 아니라 차트 안쪽 깊숙한 올인 핸드다. 올인하면 블라인드가 접어 2.5BB 를 가져오는 경우가 많고(BB 가 접는 몫 74.9%), 콜 받아도 A8o 는 가정한 콜 레인지 상대로 47.7% 를 가진다. 합치면 접을 때보다 평균 2BB 이득이다.", "calc": "① 깔린 팟 = 0.5 + 1 + 1 = 2.5BB<br>② BB 가 접는 몫 = 1 − 콜 레인지 콤보 ÷ 전체 콤보 (내 카드와 겹치는 콤보 제외) = 74.9%<br>③ 콜 받으면 A8o 에퀴티 = 47.7%, 그때 팟 = 0.5 + 1 + 8 + 8 = 17.5BB<br>④ 올인 EV(접기 대비) = 접음 × 2.5BB + 콜 × (에퀴티 × 17.5BB − 8) = 2BB", "mistake": "캐시엔 8BB 짜리 스택이 없다 — 칩이 줄면 다시 사서 100BB 로 앉는다. 그래서 '좋은 패 올 때까지 기다리기'와 '오픈했다가 리레이즈에 접기'가 몸에 배어 있다. 8BB 에서 3BB 오픈은 스택의 3분의 1 이상을 걸어 놓고 접을 길을 남기는 것 — 리레이즈를 맞으면 칩만 버린다. 림프는 블라인드에게 공짜 플랍을 주고 상대를 접게 만드는 힘(폴드 에퀴티)을 버린다.", "if_changes": "BB 가 무엇이든 콜하는 사람이면 접는 몫이 줄어 약한 패 올인은 줄이지만, A8o 는 그래도 올인이다(콜 받아도 앞서는 경우가 많다). 스택이 15BB 이상으로 깊어지면 BTN 에선 작은 오픈(2~2.2배)도 섞는다. BB 가 4~5BB 짜리 극숏이면 그는 거의 다 콜한다 — 내 패가 그의 범위보다 앞서는지만 본다."}}, {"id": "M6", "set": "main", "area": 3, "level": 6, "game": "<b>후반<\/b> · 남은 22명 · 상금 10위까지 · <b>9인<\/b> · 블라인드 1000/2000 앤티 2000 · 유효 스택 <b>10BB<\/b> (SB 10BB, 나 28BB)", "heroPos": "BB", "heroCards": "<span class=\"c\">A♠<\/span><span class=\"c\">9♣<\/span>", "heroNote": "", "villains": ["<b>SB<\/b> — 10BB 숏스택 — BB 와 단둘일 때 넓게 올인 (가정: 22+, A2+, K2+, Q2s+, Q5o+, J4s+, J7o+, T6s+, T7o+, 96s+, 97o+, 86s+, 75s+, 65s, 54s)"], "action": ["프리플랍: SB 까지 모두 폴드, SB 올인 10BB, 당신(BB) 차례."], "pot": "12BB", "board": "", "question": "<span class=\"cards\"><span class=\"c\">A♠<\/span><\/span><span class=\"cards\"><span class=\"c\">9♣<\/span><\/span>. 9BB 를 더 내고 콜할까?", "choices": ["폴드 — 올인은 강한 패라는 뜻이다", "콜", "폴드 — 지면 스택의 3분의 1 을 잃는다"], "answers": [1], "ex": {"why": "SB 가 BB 하고만 남았을 때 10BB 로 올인하는 범위는 아주 넓다 — 가정한 레인지가 758 콤보(전체 1326 콤보 중)다. 그 레인지 상대로 A9o 의 에퀴티는 57%, 콜에 필요한 승률은 42.9% — 넉넉히 넘는다.", "calc": "① 팟 = SB 10 + BB 1 + 앤티 1 = 12BB<br>② 필요 승률 = 9 ÷ (12BB + 9) = 42.9%<br>③ A9o vs SB 가정 레인지(758 콤보): 57%", "mistake": "캐시에서 누가 100BB 를 올인하면 대개 넛이다 — '올인 = 강한 패'가 몸에 배어 있다. 토너에서 10BB 숏스택의 올인은 '패가 좋다'가 아니라 '블라인드에 녹기 전에 칩을 모으겠다'는 뜻이다. 상대 스택이 작을수록 올인 레인지는 넓어지고, 콜해야 할 패도 넓어진다.", "if_changes": "같은 10BB 올인이 UTG 같은 맨 앞자리에서 왔다면 레인지가 훨씬 좁아 A9o 는 접는 쪽이 된다 — 같은 손, 같은 스택이라도 '누가 어디서' 올인했는지가 답을 바꾼다. 버블이라 이 콜에서 지면 탈락 위험이 커지는 스택이라면 ICM 때문에 더 좁게 콜한다(영역 4)."}}, {"id": "M7", "set": "main", "area": 4, "level": 7, "game": "<b>버블<\/b> · 남은 4명 · 상금 3위까지 (1위 50만 · 2위 30만 · 3위 20만) · <b>4인<\/b> · 블라인드 2000/4000 앤티 4000 · 유효 스택 <b>25BB<\/b> (칩리더 40BB, 나 25BB)", "heroPos": "BB", "heroCards": "<span class=\"c r\">A♥<\/span><span class=\"c r\">10♦<\/span>", "heroNote": "", "villains": ["<b>BTN<\/b> — 칩리더 40BB — 버블에서 넓게 올인 (가정: 22+, A2+, K2+, Q2+, J7+, T7+, 97+, 87, 76s, 65s)", "<b>SB·CO<\/b> — 20BB, 15BB — 이번 판은 접었다"], "action": ["프리플랍: BTN(칩리더) 올인, SB 폴드, 당신(BB, 25BB) 차례. 지면 탈락 — 4위는 상금이 없다."], "pot": "블라인드·앤티는 단순화를 위해 무시", "board": "", "question": "<span class=\"cards\"><span class=\"c r\">A♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">10♦<\/span><\/span>. 칩리더의 넓은 올인이다. 콜할까?", "choices": ["콜 — 레인지 상대로 앞서고 있다", "폴드 — 버블에선 앞서는 정도로는 부족하다", "콜 — 이기면 칩리더가 된다"], "answers": [1], "ex": {"why": "A10o 는 칩리더의 넓은 레인지 상대로 59.9% — 칩만 따지면(반만 넘으면 콜) 콜이다. 하지만 상금은 칩에 비례하지 않는다. 지면 상금 0, 이기면 칩은 두 배지만 상금 기댓값은 두 배가 안 된다. 단순화 ICM 으로 계산하면 이 콜에 필요한 승률은 70.4% — 59.9% 로는 모자란다.", "calc": "단순화 ICM (Malmuth-Harville, 블라인드·앤티 무시)<br>① 접으면: 칩 40·25·20·15 → 내 상금 기댓값 26.1만원<br>② 콜해서 이기면: 15·50·20·15 → 37만원<br>③ 콜해서 지면: 탈락 → 0<br>④ 필요 승률 = (접을 때 − 질 때) ÷ (이길 때 − 질 때) = 70.4%<br>⑤ A10o vs 칩리더 가정 레인지: 59.9%", "mistake": "캐시에선 칩 = 돈이라 이길 확률이 반을 넘으면 콜이 정답이다. 토너 버블에선 내가 이미 가진 칩의 가치(상금 기댓값 26.1만원)를 걸고, 이겨도 그만큼 늘지 않는다(37만원). '앞서니까 콜'은 칩 계산이다 — 버블에서 그 습관이 가장 비싸다.", "if_changes": "내가 칩리더고 상대가 25BB 였다면 지더라도 탈락하지 않으니 훨씬 넓게 콜한다(다음 문제). 상대가 넓게가 아니라 상위 패로만 올인하는 사람이면 A10o 의 에퀴티가 더 떨어져 더 분명한 폴드다. 이미 상금권 안이라면 상금 점프가 작아져 필요 승률이 칩 계산에 가까워진다. 단순화 모델의 수다 — 블라인드와 다음 판까지 넣는 실제 계산기는 몇 %p 다르게 낸다."}}, {"id": "M8", "set": "main", "area": 4, "level": 8, "game": "<b>버블<\/b> · 남은 4명 · 상금 3위까지 (1위 50만 · 2위 30만 · 3위 20만) · <b>4인<\/b> · 블라인드 2000/4000 앤티 4000 · 유효 스택 <b>20BB<\/b> (나 45BB(칩리더), BB 20BB)", "heroPos": "BTN", "heroCards": "<span class=\"c\">K♣<\/span><span class=\"c r\">6♦<\/span>", "heroNote": "", "villains": ["<b>SB<\/b> — 13BB — 숏스택, 버블을 넘기려 버티는 중", "<b>BB<\/b> — 20BB — 보통, 상금을 의식한다", "<b>CO<\/b> — 22BB — 이번 판은 접었다"], "action": ["프리플랍: CO 폴드, 당신(BTN, 칩리더) 차례."], "pot": "2.5BB", "board": "", "question": "<span class=\"cards\"><span class=\"c\">K♣<\/span><\/span><span class=\"cards\"><span class=\"c r\">6♦<\/span><\/span>. 칩리더인 내가 할 일은?", "choices": ["폴드 — K6o 는 약한 패다", "레이즈(작게든 올인이든) — 블라인드는 콜하려면 큰 승률이 필요해 대부분 접는다", "림프 — 싸게 플랍을 본다"], "answers": [1], "ex": {"why": "버블에서 내가 칩리더면 블라인드(13BB·20BB)는 내 공격에 맞섰다가 지면 탈락이다. BB 가 내 올인에 콜하려면 단순화 ICM 으로 70.1% 가 필요하다 — 내 패가 K6o 든 무엇이든 그는 대부분 접어야 한다. 반대로 BB 가 먼저 올인해 와도 나는 56% 만 있으면 콜할 수 있다. 이 비대칭이 큰 스택의 무기다.", "calc": "단순화 ICM (블라인드·앤티 무시), 칩 45·20·22·13<br>① BB 가 내 올인에 콜할 때 필요 승률 = 70.1%<br>② 내가 BB 의 20BB 올인에 콜할 때 필요 승률 = 56%<br>③ 칩만 따지면 둘 다 반반 근처면 된다<br>④ 깔린 팟 = 0.5 + 1 + 1 = 2.5BB — 버블 내내 이걸 가져오면 숏스택은 더 줄고 나는 커진다", "mistake": "캐시에선 '내 패가 약하면 접는다'가 맞다 — 상대도 같은 셈으로 콜하니까. 버블의 칩리더는 패보다 '상대가 콜할 수 있느냐'를 본다. 캐시처럼 패를 기다리면 압박할 기회를 버리고, 그사이 중간 스택들은 편하게 상금권에 들어간다.", "if_changes": "BB 가 나와 비슷한 큰 스택이면 그는 맞설 수 있다 — 범위를 좁힌다. BB 가 4~5BB 짜리 극숏이면 어차피 녹으니 거의 아무 패로나 콜한다 — 그때는 이길 만한 패로만 올인한다. 상금권에 들어간 뒤엔 이 압박의 힘이 약해진다."}}, {"id": "M9", "set": "main", "area": 5, "level": 9, "game": "<b>중반<\/b> · 남은 50명 · 상금 8위까지 · <b>9인<\/b> · 블라인드 800/1600 앤티 1600 · 유효 스택 <b>30BB<\/b>", "heroPos": "BTN", "heroCards": "", "heroNote": "레인지 질문 — 리버까지 온 내 패 넷 중 무엇으로 크게(팟 크기) 벳할까", "villains": ["<b>BB<\/b> — 보통 — 리버 큰 벳엔 좋은 원페어 이상으로 콜"], "action": ["프리플랍: 당신(BTN) 2.2BB 오픈, BB 콜. 팟 5.9BB", "플랍 <span class=\"cards\"><span class=\"c r\">K♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">8♦<\/span><\/span><span class=\"cards\"><span class=\"c\">4♣<\/span><\/span>: BB 체크, 당신 1.5BB, BB 콜. 팟 8.9BB", "턴 <span class=\"cards\"><span class=\"c\">7♠<\/span><\/span>: 체크, 체크.", "리버 <span class=\"cards\"><span class=\"c r\">2♥<\/span><\/span>: BB 체크. 당신 차례."], "pot": "8.9BB", "board": "<span class=\"street cards\"><span class=\"c r\">K♥<\/span><span class=\"c r\">8♦<\/span><span class=\"c\">4♣<\/span><\/span><span class=\"street cards\"><span class=\"c\">7♠<\/span><\/span><span class=\"street cards\"><span class=\"c r\">2♥<\/span><\/span>", "question": "다음 넷 중 리버 팟 크기 벳(8.9BB)에 «맞지 않는» 패는?", "choices": ["<span class=\"cards\"><span class=\"c\">K♠<\/span><\/span><span class=\"cards\"><span class=\"c r\">K♦<\/span><\/span> — K 셋", "<span class=\"cards\"><span class=\"c\">6♠<\/span><\/span><span class=\"cards\"><span class=\"c r\">5♦<\/span><\/span> — 스트레이트", "<span class=\"cards\"><span class=\"c\">9♣<\/span><\/span><span class=\"cards\"><span class=\"c\">8♣<\/span><\/span> — 두 번째 페어", "<span class=\"cards\"><span class=\"c r\">10♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">9♥<\/span><\/span> — 놓친 스트레이트 드로우"], "answers": [2], "ex": {"why": "팟 크기 벳에 상대가 콜하는 건 좋은 원페어 이상이다. <span class=\"cards\"><span class=\"c\">9♣<\/span><\/span><span class=\"cards\"><span class=\"c\">8♣<\/span><\/span>(두 번째 페어)로 크게 벳하면 그보다 약한 패는 접고, 나를 이기는 패(K 페어 이상)만 콜한다 — 이기면 작게, 지면 크게. 그래서 중간 패는 체크해서 싸게 쇼다운한다. 크게 벳하는 건 콜 받아도 이기는 패(셋·스트레이트)와, 콜 받으면 지지만 상대를 접게 할 수 있는 패(놓친 드로우)뿐 — 이게 '양극화(폴라)'다.", "calc": "① 팟 = 2.2 + 2.2 + 0.5 + 1 = 5.9BB → 플랍 1.5 + 1.5 → 8.9BB<br>② 팟 크기 벳 = 8.9BB, 상대가 콜할 때 필요 승률 = 33.3%<br>③ 균형 잡힌 폴라 벳의 블러프 몫 = B ÷ (P + 2B) = 33.3% — 벳 셋 중 하나는 블러프여도 된다", "mistake": "캐시에선 '조금이라도 앞서면 작게 밸류벳'(얇은 밸류)이 큰 수익원이다 — 깊은 스택에서 콜이 많기 때문. 토너에선 체크-레이즈 한 번에 스택이 위험해지고 칩을 지키는 가치가 크다. 두 번째 페어로 얇게 벳하는 습관은 줄이고, 벳할 땐 크게 — 강한 패와 블러프로만.", "if_changes": "상대가 아무 페어나 콜하는 스테이션이면 <span class=\"cards\"><span class=\"c\">9♣<\/span><\/span><span class=\"cards\"><span class=\"c\">8♣<\/span><\/span> 로 작게 밸류벳할 수 있고, 블러프(<span class=\"cards\"><span class=\"c r\">10♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">9♥<\/span><\/span>)는 접는다. 상대가 리버 체크-레이즈 블러프를 자주 하는 사람이면 중간 패는 더더욱 체크. 스택이 짧아(10BB 안팎) 리버 벳이 곧 올인이면 블러프는 상대가 접을 수 있는 사람일 때만."}}, {"id": "M10", "set": "main", "area": 5, "level": 10, "game": "<b>중반<\/b> · 남은 35명 · 상금 6위까지 · <b>9인<\/b> · 블라인드 1000/2000 앤티 2000 · 유효 스택 <b>25BB<\/b>", "heroPos": "CO", "heroCards": "", "heroNote": "레인지 질문 — 리버 올인할 패: 밸류 10콤보(스트레이트·셋) + 블러프 후보(놓친 드로우) 여럿", "villains": ["<b>BB<\/b> — 레귤러 — 생각하고 콜한다"], "action": ["프리플랍: 당신(CO) 2.2BB 오픈, BB 콜. 팟 5.9BB", "플랍 <span class=\"cards\"><span class=\"c r\">J♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">8♥<\/span><\/span><span class=\"cards\"><span class=\"c\">4♣<\/span><\/span>: BB 체크, 당신 2BB, BB 콜. 팟 9.9BB", "턴 <span class=\"cards\"><span class=\"c\">2♠<\/span><\/span>: 체크, 체크.", "리버 <span class=\"cards\"><span class=\"c r\">7♦<\/span><\/span>: BB 체크. 남은 스택 20.8BB — 당신은 올인하려 한다."], "pot": "9.9BB", "board": "<span class=\"street cards\"><span class=\"c r\">J♥<\/span><span class=\"c r\">8♥<\/span><span class=\"c\">4♣<\/span><\/span><span class=\"street cards\"><span class=\"c\">2♠<\/span><\/span><span class=\"street cards\"><span class=\"c r\">7♦<\/span><\/span>", "question": "리버 올인(20.8BB) 레인지가 균형이 맞으려면, 밸류 10콤보에 블러프를 몇 콤보 섞어야 할까?", "choices": ["약 3콤보", "약 5콤보", "약 7콤보", "10콤보 — 밸류와 같은 수"], "answers": [2], "ex": {"why": "올인이 팟보다 클수록 상대가 받는 가격이 나빠져(콜하려면 더 자주 이겨야) 내가 섞을 수 있는 블러프가 늘어난다. 이 크기에선 상대가 콜하려면 40.4% 를 이겨야 하고, 그래서 내 올인 레인지의 40.4% 까지는 블러프여도 상대는 콜해도 접어도 이득을 못 본다 — 밸류 10 에 블러프 약 7콤보.", "calc": "① 팟 = 5.9BB → 플랍 2 + 2 → 9.9BB, 남은 스택 = 25 − 2.2 − 2 = 20.8BB<br>② 블러프 콤보 = 밸류 × B ÷ (P + B) = 10 × 20.8BB ÷ (9.9BB + 20.8BB) = 7콤보<br>③ 블러프 몫 = B ÷ (P + 2B) = 40.4% = 상대의 필요 승률 40.4% (같은 식이다)<br>④ 팟 크기 벳이었다면 블러프 몫 = 33.3%", "mistake": "캐시에선 '올인 = 넛'으로 읽히고, 블러프 올인은 무섭다는 감각이 있다. 그래서 큰 벳을 밸류로만 치거나(상대가 다 접어 밸류가 안 나온다), 블러프를 '작게' 하려 든다. 그런데 작은 벳일수록 블러프 몫은 줄어야 한다(33.3% vs 40.4%). 폴라 레인지에선 크게 칠수록 블러프가 더 들어간다.", "if_changes": "상대가 콜을 너무 많이 하는 사람이면 블러프 0, 밸류 올인만. 상대가 버블에서 탈락을 두려워하는 중간 스택이면 콜에 필요한 승률이 칩 계산보다 훨씬 높아져 블러프를 더 늘린다(보충 문제). 블러프는 상대의 강한 패를 막는 카드(블로커 — 이 보드라면 T 나 6 같은 스트레이트 재료)를 든 패부터 고른다."}}, {"id": "S1", "set": "supp", "area": 1, "level": 11, "game": "<b>초반 끝<\/b> · 남은 70명 · 상금 9위까지 · <b>9인<\/b> · 블라인드 300/600 앤티 600 · 유효 스택 <b>40BB<\/b>", "heroPos": "MP", "heroCards": "", "heroNote": "칩 24,000 — 앞으로 한 시간의 계획", "villains": ["<b>테이블<\/b> — 레벨은 20분마다 오른다: 300/600 → 400/800 → 500/1000 → 600/1200 (앤티 = BB)"], "action": ["지금부터 한 시간(세 레벨) 동안 한 판도 못 이긴다고 하자. 레벨마다 대략 한 바퀴씩 블라인드·앤티를 낸다."], "pot": "1,500 (지금 레벨 한 바퀴 비용)", "board": "", "question": "한 시간 뒤 600/1200 레벨이 시작될 때 내 스택은 몇 BB 일까?", "choices": ["약 30BB — 칩이 조금 줄었을 뿐", "약 15BB", "약 20BB", "그대로 40BB — 판을 안 했으니"], "answers": [1], "ex": {"why": "칩은 18,000 로 4분의 1 만 줄었지만, 블라인드가 두 배가 돼 BB 로는 40BB → 15BB. 한 시간 동안 아무것도 안 하면 '여유 있는 스택'이 '올인/폴드 문턱'이 된다. 토너에선 접기만 하는 것도 칩을 잃는 플레이다.", "calc": "① 세 레벨의 한 바퀴 비용 = 1,500 + 2,000 + 2,500 = 6,000<br>② 남은 칩 = 24000 − 6,000 = 18,000<br>③ 600/1200 에서 = 18,000 ÷ 1200 = 15BB<br>④ 지금: 24000 ÷ 600 = 40BB", "mistake": "캐시에선 접기만 하면 스택이 거의 그대로다(블라인드가 안 오른다). 그래서 '애매하면 접고 좋은 패 기다리기'가 안전하다. 토너에선 같은 습관이 한 시간에 40BB 를 15BB 로 만든다 — 스택이 줄어든 뒤에 좋은 패가 오면 따올 칩도 작다.", "if_changes": "레벨이 30분이면 녹는 속도가 느려져 기다릴 여유가 조금 생긴다. 테이블이 6~7명으로 줄면 한 바퀴가 빨리 돌아 더 빨리 녹는다. 그 사이 깔린 팟을 한두 번만 가져와도(한 번에 2.5BB) 녹는 속도를 크게 늦춘다 — 그래서 늦은 자리 스틸이 중요하다(영역 2)."}}, {"id": "S2", "set": "supp", "area": 1, "level": 12, "game": "<b>중반<\/b> · 남은 38명 · 상금 8위까지 · <b>9인<\/b> · 블라인드 1000/2000 앤티 2000 · 유효 스택 <b>9BB<\/b> (나 50BB, BB 9BB, SB 30BB)", "heroPos": "BTN", "heroCards": "<span class=\"c r\">K♦<\/span><span class=\"c\">9♣<\/span>", "heroNote": "", "villains": ["<b>SB<\/b> — 30BB — 이번엔 접는다고 가정", "<b>BB<\/b> — 9BB 숏스택 — 레이즈를 보면 넓게 올인 (가정: 22+, A2+, K5+, Q8+, J9+, T9s)"], "action": ["프리플랍: BTN 까지 폴드, 당신(BTN) 차례."], "pot": "2.5BB", "board": "", "question": "<span class=\"cards\"><span class=\"c r\">K♦<\/span><\/span><span class=\"cards\"><span class=\"c\">9♣<\/span><\/span>. 계획은?", "choices": ["내 50BB 기준으로 3배 오픈 — BB 가 올인하면 '강한 패'라고 보고 접는다", "2BB 오픈 — BB 가 올인하면 콜하기로 미리 정한다", "폴드 — 숏스택 BB 와 엮이면 귀찮다", "림프"], "answers": [1], "ex": {"why": "게임 크기는 작은 쪽 스택이다 — BB 와는 9BB 게임. 오픈하면 BB 는 자주 올인으로 받아칠 텐데, 그때 7BB 를 더 내고 콜하는 데 필요한 승률은 35.9% 뿐이고 K9o 는 가정한 올인 레인지 상대로 45.3%. 오픈하기 전에 '올인 오면 콜'을 정해 두면 판단이 흔들리지 않는다.", "calc": "① 깔린 팟 = 2.5BB<br>② 내가 2BB 오픈 → BB 9BB 올인 → 팟 = 2 + 9 + 0.5 + 1(앤티) = 12.5BB<br>③ 콜에 필요한 승률 = 7 ÷ (12.5BB + 7) = 35.9%<br>④ K9o vs BB 가정 레인지: 45.3%", "mistake": "캐시에선 내 스택이 곧 게임 크기다 — 50BB 면 50BB 게임을 한다. 그래서 '3배 오픈, 올인 받으면 강하다고 보고 접기'가 자연스럽다. 토너에서 9BB 숏스택의 올인은 넓다. 3배로 키워 놓고 접으면 칩만 준다 — 접을 거면 처음부터 오픈하지 않는 게 낫다.", "if_changes": "BB 가 아주 타이트한 사람(상위 패만 올인)이면 콜할 패가 좁아진다 — K9o 는 오픈 후 올인엔 접는 쪽. SB 가 3벳을 자주 하는 사람이면 오픈 범위를 줄인다. BB 가 50BB 로 깊었다면 보통의 BTN 오픈이고, 그때는 BB 의 3벳에 K9o 를 접는다."}}, {"id": "S3", "set": "supp", "area": 2, "level": 13, "game": "<b>중반<\/b> · 남은 33명 · 상금 6위까지 · <b>9인<\/b> · 블라인드 800/1600 앤티 1600 · 유효 스택 <b>25BB<\/b>", "heroPos": "BTN", "heroCards": "<span class=\"c r\">Q♦<\/span><span class=\"c\">4♣<\/span>", "heroNote": "", "villains": ["<b>SB<\/b> — 타이트 — 강한 패 아니면 접는다", "<b>BB<\/b> — 타이트 — 몸을 사린다. 두 사람이 합쳐 10번 중 7번은 접는다고 하자"], "action": ["프리플랍: BTN 까지 폴드, 당신(BTN) 차례."], "pot": "2.5BB", "board": "", "question": "<span class=\"cards\"><span class=\"c r\">Q♦<\/span><\/span><span class=\"cards\"><span class=\"c\">4♣<\/span><\/span> — 평소라면 접을 패. 2.2BB 로 훔칠까?", "choices": ["폴드 — Q4o 는 쓰레기 패다", "2.2BB 오픈 — 블라인드가 이만큼 자주 접으면 패와 상관없이 이득", "25BB 올인 — 확실히 접게 만든다"], "answers": [1], "ex": {"why": "스틸의 이익은 패보다 '블라인드가 얼마나 접나'에서 나온다. 2.2BB 를 걸어 2.5BB 를 가져오는 오픈은 둘이 46.8% 이상 접으면 — 콜 받아서 매번 진다고 쳐도 — 이득이다. 10번 중 7번 접는 블라인드라면 가장 나쁜 경우로 계산해도 판당 1.1BB.", "calc": "① 깔린 팟 = 2.5BB<br>② 손익분기 폴드 = 2.2 ÷ (2.5BB + 2.2) = 46.8%<br>③ 가장 나쁜 경우 EV = 0.7 × 2.5BB − 0.3 × 2.2 = 1.1BB (콜·리레이즈를 받으면 항상 진다고 가정)<br>④ 25BB 올인이면 손익분기 = 25 ÷ (2.5BB + 25) = 90.9%", "mistake": "캐시에선 BTN 에서도 Q4o 는 접는 게 보통이다 — 앤티가 없어 깔린 돈이 1.5BB 뿐이고, 콜 받으면 플랍 이후가 길다. 토너 앤티 팟엔 2.5BB 가 깔려 있고 타이트한 블라인드는 자기 패가 없으면 그냥 준다. 패만 보고 접는 게 캐시 습관이다. 반대로 올인은 과하다 — 같은 팟을 위해 25BB 를 걸면 90.9% 가 접어야 이득이다.", "if_changes": "BB 가 무엇이든 방어하는 사람이면 접는 몫이 46.8% 아래로 떨어질 수 있다 — 그때는 Q4o 는 접고, 콜 받아도 플레이되는 패로만 훔친다. 블라인드 중 하나가 10BB 이하 숏스택이면 올인으로 받아치기 쉽다 — 그 올인에 콜할 수 있는 패로만 오픈한다(앞 문제)."}}, {"id": "S4", "set": "supp", "area": 2, "level": 14, "game": "<b>중반<\/b> · 남은 40명 · 상금 8위까지 · <b>9인<\/b> · 블라인드 1000/2000 앤티 2000 · 유효 스택 <b>35BB<\/b>", "heroPos": "BB", "heroCards": "<span class=\"c r\">8♥<\/span><span class=\"c r\">6♥<\/span>", "heroNote": "", "villains": ["<b>BTN<\/b> — 2.5BB 오픈 — 넓게 훔친다 (가정: 22+, A2+, K2s+, K7o+, Q5s+, Q9o+, J7s+, J9o+, T7s+, T9o, 97s+, 86s+, 75s+, 65s, 54s)", "<b>SB<\/b> — 콜 — 중간 패로 따라 들어왔다 (가정: 22, 33, 44, 55, 66, 77, 88, 99, AJs, ATs, A5s, A4s, A3s, A2s, KTs+, QTs+, JTs, T9s, 98s, 87s)"], "action": ["프리플랍: BTN 2.5BB 오픈, SB 콜, 당신(BB) 차례."], "pot": "7BB", "board": "", "question": "<span class=\"cards\"><span class=\"c r\">8♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">6♥<\/span><\/span>. 1.5BB 를 더 내고 콜하려면 승률이 얼마나 필요할까?", "choices": ["20%", "17.6%", "21.4%", "33.3% — 셋이 나누니 3분의 1"], "answers": [1], "ex": {"why": "필요 승률 = 콜 ÷ (콜한 뒤 전체 팟). 앤티 1BB 까지 넣어 팟이 7BB 이고, 콜하면 8.5BB — 1.5 ÷ 8.5BB = 17.6%. 86s 는 두 레인지 상대로 3인 에퀴티가 27.3% 라 넉넉히 콜이다(포지션이 없어 에퀴티를 다 살리지 못하는 걸 감안해도).", "calc": "① 팟 = SB 2.5 + BTN 2.5 + BB 1 + 앤티 1 = 7BB<br>② 콜 뒤 팟 = 8.5BB → 필요 승률 = 1.5 ÷ 8.5BB = 17.6%<br>③ 앤티를 빼먹으면 1.5 ÷ 7.5 = 20% / 콜을 팟에 안 더하면 1.5 ÷ 7 = 21.4%<br>④ 86s vs BTN·SB 가정 레인지 (3인): 27.3%", "mistake": "캐시엔 앤티가 없어 팟 계산에 앤티를 넣는 습관이 없다. 앤티를 빼먹으면 가격을 실제보다 비싸게 보고, 3인 팟에서 '셋이 나누니 3분의 1은 이겨야 한다(33.3%)'는 감각까지 겹치면 이길 수 있는 콜을 계속 접게 된다.", "if_changes": "SB 대신 앞자리의 강한 패가 콜했다면 86s 의 3인 에퀴티가 떨어진다 — 그래도 가격이 싸서 콜이 남는 경우가 많다. 내 스택이 15BB 안팎이면 콜보다 올인/폴드를 먼저 본다(86s 는 대개 폴드). BTN 이 3배 이상으로 오픈하면 가격이 오른다 — 다시 계산한다."}}, {"id": "S5", "set": "supp", "area": 3, "level": 15, "game": "<b>중반<\/b> · 남은 30명 · 상금 6위까지 · <b>9인<\/b> · 블라인드 1000/2000 앤티 2000 · 유효 스택 <b>18BB<\/b> (나 18BB, CO 40BB)", "heroPos": "BTN", "heroCards": "<span class=\"c\">7♠<\/span><span class=\"c r\">7♥<\/span>", "heroNote": "", "villains": ["<b>CO<\/b> — LAG — 넓게 오픈 (가정: 22+, A2s+, A7o+, K8s+, KTo+, Q9s+, QTo+, J9s+, JTo, T8s+, 98s, 87s, 76s), 내 올인엔 88+, ATs+, AJo+, KQs 로만 콜 (가정)", "<b>SB·BB<\/b> — 접는다고 가정"], "action": ["프리플랍: CO 2.2BB 오픈, 당신(BTN, 18BB) 차례."], "pot": "4.7BB", "board": "", "question": "<span class=\"cards\"><span class=\"c\">7♠<\/span><\/span><span class=\"cards\"><span class=\"c r\">7♥<\/span><\/span>, 18BB. 어떻게?", "choices": ["콜 — 셋을 맞추면 크게 먹는다", "폴드 — 오픈한 사람이 더 강할 수 있다", "올인(리스틸)", "6BB 로 작게 3벳, 올인 오면 접는다"], "answers": [2], "ex": {"why": "18BB 에서 77 은 콜보다 올인 리스틸이 낫다. CO 의 넓은 오픈은 대부분 올인을 못 받는다(접는 몫 69.8%). 접으면 4.7BB 를 그냥 가져오고, 콜 받아도 77 은 콜 레인지 상대로 38.9%. 합치면 접기 대비 2.4BB.", "calc": "① 깔린 팟 = 0.5 + 1 + 1 + 2.2 = 4.7BB<br>② CO 가 접는 몫 = 1 − 콜 콤보 ÷ 오픈 콤보 (내 카드와 겹치는 콤보 제외) = 69.8%<br>③ 콜 받으면 77 에퀴티 38.9%, 팟 = 0.5 + 1 + 1 + 18 + 18 = 38.5BB<br>④ 올인 EV = 접음 × 4.7BB + 콜 × (에퀴티 × 38.5BB − 18) = 2.4BB<br>⑤ 콜해서 플랍에 셋이 맞을 확률 = 11.8%", "mistake": "캐시 100BB 에선 77 로 콜하고 셋을 노리는 게(셋마이닝) 기본이다 — 셋이 맞으면 상대 스택을 크게 딸 수 있어서. 18BB 에선 셋은 플랍에 11.8% 만 맞고, 맞아도 따올 칩이 작다. 콜하면 77 의 '상대를 접게 만드는 힘'을 버린다. 작은 3벳 후 올인에 접는 것도 칩만 버리는 선택이다.", "if_changes": "CO 가 타이트해서 좋은 패로만 오픈하면 접는 몫이 줄어 올인 이득이 줄어든다 — 경계로 간다. 내 스택이 40BB 이상이면 18BB 올인 같은 큰 리스틸은 과해서 작은 3벳이나 콜이 다시 후보가 된다. 뒤의 블라인드가 숏스택이면 그들이 콜할 수 있어 계산이 바뀐다."}}, {"id": "S6", "set": "supp", "area": 3, "level": 16, "game": "<b>후반<\/b> · 남은 24명 · 상금 10위까지 · <b>9인<\/b> · 블라인드 1500/3000 앤티 3000 · 유효 스택 <b>12BB<\/b> (UTG 12BB, 나 25BB)", "heroPos": "HJ", "heroCards": "<span class=\"c r\">K♥<\/span><span class=\"c r\">Q♦<\/span>", "heroNote": "", "villains": ["<b>UTG<\/b> — 보통 — 12BB 로 맨 앞에서 올인 (가정: 55+, A8s+, ATo+, KTs+, KQo, QJs)", "<b>뒤의 넷<\/b> — CO·BTN·SB·BB — 아직 행동 전"], "action": ["프리플랍: UTG 올인 12BB, UTG+1~LJ 폴드, 당신(HJ) 차례."], "pot": "14.5BB", "board": "", "question": "<span class=\"cards\"><span class=\"c r\">K♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">Q♦<\/span><\/span>. 내가 먼저 올인할 차례였다면 차트상 올인 패다. 지금 콜할까?", "choices": ["콜 — KQo 는 내가 올인할 때도 쓰는 패다", "폴드 — 남의 올인을 콜하는 범위는 내가 올인하는 범위보다 좁다", "올인으로 리레이즈 — 뒤를 접게 만든다"], "answers": [1], "ex": {"why": "먼저 올인하면 상대가 접어서 이기는 길이 있지만, 남의 올인을 콜할 땐 그 길이 없다 — 패의 힘만으로 이겨야 한다. 맨 앞자리 12BB 올인은 좁고 강해서 KQo 는 39.2% 밖에 안 되고, 필요 승률 45.3% 에 못 미친다. 게다가 뒤에 넷이 남아 더 강한 패가 끼어들 수도 있다.", "calc": "① 팟 = UTG 12 + SB 0.5 + BB 1 + 앤티 1 = 14.5BB<br>② 12BB 콜의 필요 승률 = 12 ÷ (14.5BB + 12) = 45.3%<br>③ KQo vs UTG 가정 레인지: 39.2%<br>④ 비교: AJo 였다면 45.8% — 필요 승률과 거의 같다(경계)", "mistake": "캐시에선 KQo 는 '좋은 패'라 올인을 받아도 손이 간다. 그리고 '내가 올인할 패면 콜할 패'라고 느낀다. 토너 숏스택 싸움에선 둘이 다르다 — 먼저 치는 쪽은 상대를 접게 만드는 힘(폴드 에퀴티)을 얹고, 콜하는 쪽은 패의 힘뿐이다. 이 차이를 '갭'이라고 부른다.", "if_changes": "같은 12BB 올인이 BTN·SB 같은 늦은 자리에서 왔다면 레인지가 넓어 KQo 는 콜이 된다. UTG 가 5BB 짜리 극숏이면 넓게 올인하니 콜 쪽으로 간다. 이 콜에 지면 내 스택이 반토막인데 버블이 가깝다면 더 좁게 콜한다(영역 4)."}}, {"id": "S7", "set": "supp", "area": 4, "level": 17, "game": "<b>버블<\/b> · 남은 5명 · 상금 4위까지 (1위 40만 · 2위 25만 · 3위 20만 · 4위 15만) · <b>5인<\/b> · 블라인드 3000/6000 앤티 6000 · 유효 스택 <b>30BB<\/b> (칩리더 35BB, 나 30BB)", "heroPos": "BB", "heroCards": "<span class=\"c r\">A♥<\/span><span class=\"c r\">Q♦<\/span>", "heroNote": "", "villains": ["<b>SB<\/b> — 칩리더 35BB — 버블에서 넓게 올인 (가정: 22+, A2+, K2+, Q2+, J7+, T7+, 97+, 87, 76s, 65s)", "<b>BTN<\/b> — 4BB — 다음 바퀴면 블라인드에 녹는다. 이번 판은 접었다", "<b>나머지 둘<\/b> — 16BB, 15BB — 접었다"], "action": ["프리플랍: SB 앞까지 모두 폴드, SB(칩리더) 올인, 당신(BB, 30BB) 차례. 지면 탈락(5위, 상금 없음)."], "pot": "블라인드·앤티는 단순화를 위해 무시", "board": "", "question": "<span class=\"cards\"><span class=\"c r\">A♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">Q♦<\/span><\/span>. 콜할까?", "choices": ["콜 — AQo 면 칩리더의 넓은 올인엔 무조건 콜", "폴드 — 지면 0, 접고 버티면 상금권이 가깝다", "콜 — 이기면 칩리더, 상금권도 확정"], "answers": [1], "ex": {"why": "AQo 는 칩리더 레인지 상대로 63.6% 다 — 캐시라면 고민 없이 콜. 하지만 버블에서 칩리더에게 지면 상금 0, 이겨도 상금 기댓값은 25.9만원 → 33.2만원 로 조금 늘 뿐이다. 접고 버티면 누군가(특히 4BB 짜리) 먼저 떨어져 상금권에 들어갈 가능성이 크다. 단순화 ICM 으로 필요 승률은 78.1% — 63.6% 로는 모자란다.", "calc": "단순화 ICM (블라인드·앤티 무시), 상금 40·25·20·15 (만원)<br>① 접을 때: 칩 35·30·4·16·15 → 내 기댓값 25.9만원<br>② 콜해서 이길 때: 5·60·4·16·15 → 33.2만원<br>③ 질 때: 탈락(5위) → 0<br>④ 필요 승률 = 78.1%<br>⑤ 4BB 짜리 없이 칩이 고르게 나뉜 버블(35·30·12·12·11)이었다면: 77%<br>⑥ AQo vs 칩리더 가정 레인지: 63.6%", "mistake": "캐시엔 상금 구조가 없다 — 앞서면 콜이 언제나 맞다. 버블의 중간 스택은 '지면 잃는 상금'과 '숏스택이 먼저 떨어지면 공짜로 얻는 상금'을 같이 본다. AQo 를 접는 게 아깝게 느껴지는 그 감각이 캐시 습관이다.", "if_changes": "4BB 짜리가 없고 칩이 고르게 나뉜 버블이어도 필요 승률은 77% — 숏스택이 올리는 몫은 생각보다 작고, 버블 구조 자체(5위만 0원, 칩리더에게 지면 탈락)가 대부분이다. 그러니 4BB 짜리가 없어도 접는다. 내가 칩리더였다면 지더라도 탈락하지 않아 콜이 훨씬 쉽다. 이미 상금권 안이라면 다음 상금 점프만 걸려 칩 계산에 가까워진다. 단순화 모델의 수다 — 실제 계산기와 몇 %p 다를 수 있다."}}, {"id": "S8", "set": "supp", "area": 4, "level": 18, "game": "<b>버블<\/b> · 남은 4명 · 상금 3위까지 (1위 50만 · 2위 30만 · 3위 20만) · <b>4인<\/b> · 블라인드 4000/8000 앤티 8000 · 유효 스택 <b>25BB<\/b> (칩리더 45BB · 나 25BB · B 22BB · C 8BB)", "heroPos": "CO", "heroCards": "", "heroNote": "나는 25BB. 칩리더가 누구에게 올인하느냐에 따라 콜 기준이 달라진다 — 세 사람을 비교하는 문제", "villains": ["<b>칩리더<\/b> — 45BB — 버블에서 아무에게나 올인한다", "<b>B<\/b> — 22BB 중간 스택", "<b>C<\/b> — 8BB 숏스택"], "action": ["가정: 칩리더가 한 사람에게 올인하고, 나머지는 접는다. 블라인드·앤티는 무시."], "pot": "단순화 — 깔린 돈 없음", "board": "", "question": "칩리더의 올인을 콜할 때 필요한 승률이 가장 «낮은» 사람은?", "choices": ["나 (25BB)", "B (22BB)", "C (8BB 숏스택)", "셋 다 같다 — 올인 콜은 반반이면 된다"], "answers": [2], "ex": {"why": "숏스택 C 는 접어도 곧 블라인드에 녹아 4위가 될 가능성이 크다 — 지킬 것이 적다. 그래서 콜 기준이 가장 낮다(60.1%). 가장 조심해야 하는 건 중간 스택이다: 나(73.6%)와 B(72.8%)는 C 가 먼저 떨어지길 기다리기만 해도 상금권인데, 칩리더와 붙어 지면 그 기회를 날린다. 칩만 따지면 셋 다 반반이면 되지만, 상금 계산에선 누구도 반반으로는 안 된다.", "calc": "단순화 ICM (Malmuth-Harville), 칩 45·25·22·8, 상금 50·30·20 (만원)<br>① 나(25BB)가 콜: 이기면 20·50·22·8, 지면 70·0·22·8 → 필요 승률 73.6%<br>② B(22BB)가 콜: 이기면 23·25·44·8, 지면 67·25·0·8 → 72.8%<br>③ C(8BB)가 콜: 이기면 37·25·22·16, 지면 53·25·22·0 → 60.1%", "mistake": "캐시엔 '스택 크기에 따라 콜 기준이 달라진다'는 감각이 없다 — 칩은 칩이니까. 그래서 버블에서도 '좋은 패면 콜'을 똑같이 적용한다. 토너에선 같은 패, 같은 상대라도 내 스택과 테이블의 숏스택이 콜 기준을 바꾼다.", "if_changes": "C 가 8BB 가 아니라 B 와 칩을 나눠 둘 다 15BB 였다면 '숏스택이 먼저 떨어지길 기다리기'의 가치가 줄어 내 필요 승률도 72.1% 로 조금 내려간다 — 그래도 반반과는 거리가 멀다. 비슷한 중간 스택끼리 붙으면 서로 조심해야 해서 둘 다 넓게 접는다. 상금권에 들어가면 이 차이는 다음 상금 점프 크기만큼으로 줄어든다."}}, {"id": "S9", "set": "supp", "area": 5, "level": 19, "game": "<b>중반<\/b> · 남은 32명 · 상금 6위까지 · <b>9인<\/b> · 블라인드 1000/2000 앤티 2000 · 유효 스택 <b>22BB<\/b>", "heroPos": "CO", "heroCards": "<span class=\"c r\">A♦<\/span><span class=\"c\">J♣<\/span>", "heroNote": "", "villains": ["<b>BB<\/b> — 보통 — 22BB, 프리플랍 콜. 플랍에서 올인한다면 이 패들 (가정: AQ, AT, A9, A8, A5, A4, A3, 77, 22, 65s)"], "action": ["프리플랍: 당신(CO) 2.2BB 오픈, BB 콜. 팟 5.9BB, 남은 스택 19.8BB", "플랍 <span class=\"cards\"><span class=\"c\">A♣<\/span><\/span><span class=\"cards\"><span class=\"c r\">7♥<\/span><\/span><span class=\"cards\"><span class=\"c\">2♠<\/span><\/span>: BB 체크."], "pot": "5.9BB", "board": "<span class=\"street cards\"><span class=\"c\">A♣<\/span><span class=\"c r\">7♥<\/span><span class=\"c\">2♠<\/span><\/span>", "question": "<span class=\"cards\"><span class=\"c r\">A♦<\/span><\/span><span class=\"cards\"><span class=\"c\">J♣<\/span><\/span>, 톱페어 좋은 키커. 이 팟의 계획은?", "choices": ["체크 — 큰 팟을 피하고 싸게 쇼다운", "작게 벳하고, 올인을 맞으면 접는다 — 원페어로 스택을 걸지 않는다", "작게 벳하고, 올인을 맞으면 콜 — 이 팟은 스택이 다 들어가는 팟이다", "체크하고, 벳이 오면 접는다"], "answers": [2], "ex": {"why": "팟 대비 남은 스택(SPR)이 3.4 로 작다. 이 정도면 톱페어 좋은 키커는 '스택을 다 걸어도 되는 패'다 — 플랍·턴에 벳 두 번이면 스택이 다 들어간다. 그러니 벳해서 약한 A·7·드로우에게 값을 받고, 상대가 올인하면 콜한다. 가정한 올인 레인지 상대로 AJ 는 68% — 필요 승률 39.1% 를 넘는다.", "calc": "① 팟 = 2.2 + 2.2 + 0.5 + 1 = 5.9BB<br>② 남은 스택 = 22 − 2.2 = 19.8BB<br>③ SPR = 19.8BB ÷ 5.9BB = 3.4<br>④ 캐시 100BB 같은 팟이었다면 SPR = (100 − 2.2) ÷ 5.9BB = 16.6<br>⑤ 플랍 2BB 벳 뒤 상대 올인: 콜 17.8BB, 팟 27.7BB → 필요 승률 39.1%<br>⑥ AJ vs BB 가정 올인 레인지 (이 플랍에서): 68%", "mistake": "캐시 100BB 에선 같은 팟의 SPR 이 16.6 — 톱페어로 스택을 다 넣으면 대개 더 강한 패에게 진다. 그래서 '원페어로는 큰 팟을 만들지 않는다'가 몸에 배어 있다. 토너 22BB 에선 같은 톱페어가 '끝까지 가는 패'다 — 캐시처럼 레이즈에 접으면 이길 팟을 자주 포기한다.", "if_changes": "보드가 연결되고 같은 무늬(예: <span class=\"cards\"><span class=\"c r\">J♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">10♥<\/span><\/span><span class=\"cards\"><span class=\"c r\">9♥<\/span><\/span>)라 톱페어가 쉽게 역전되는 판이면 계획을 다시 짠다 — 그래도 SPR 이 작으면 대개 간다. 상대가 셋·투페어로만 올인하는 극단적으로 타이트한 사람이면 접을 수 있지만, 펍 토너에서 그런 사람은 드물다. 스택이 60BB 이상으로 깊다면 캐시와 비슷하게 원페어로는 팟 크기를 조절한다."}}, {"id": "S10", "set": "supp", "area": 5, "level": 20, "game": "<b>버블<\/b> · 남은 4명 · 상금 3위까지 (1위 50만 · 2위 30만 · 3위 20만) · <b>4인<\/b> · 블라인드 3000/6000 앤티 6000 · 유효 스택 <b>25BB<\/b> (나 40BB(칩리더), 상대 25BB)", "heroPos": "BTN", "heroCards": "", "heroNote": "레인지 질문 — 리버 올인 레인지에 블러프를 얼마나 섞나", "villains": ["<b>BB<\/b> — 25BB 중간 스택 — 상금을 의식하는 보통 플레이어", "<b>다른 둘<\/b> — 20BB, 15BB — 접었다"], "action": ["프리플랍~턴: 둘이 6BB 씩 넣어 팟이 12BB 가 됐다. 남은 스택: 나 34BB, BB 19BB.", "리버: BB 체크. 당신이 19BB 올인하려 한다."], "pot": "12BB", "board": "", "question": "칩만 따지면 이 올인의 균형 블러프 몫은 38%. 버블에서 중간 스택을 상대로는?", "choices": ["블러프를 줄인다 — 버블엔 조심해야 하니까", "똑같이 38%", "블러프를 늘린다 — 상대가 콜하려면 훨씬 높은 승률이 필요하다", "블러프 0 — 올인은 넛으로만"], "answers": [2], "ex": {"why": "균형 블러프 몫은 '상대가 콜하는 데 필요한 승률'과 같은 수다. 칩으로는 38%지만, 이 콜에 지면 버블에서 탈락하는 중간 스택에게는 단순화 ICM 으로 60.6% 가 필요하다. 상대가 그만큼 더 자주 접어야 하니, 나는 블러프를 더 섞어도 상대가 콜로 이득을 못 본다 — 버블의 칩리더가 공격적이어야 하는 이유다.", "calc": "① 리버 팟 12BB, 올인 19BB<br>② 칩 기준: 필요 승률 = 19BB ÷ (12BB + 2 × 19BB) = 38% = 블러프 몫 B ÷ (P + 2B) = 38%<br>③ ICM 기준 (칩 46·19·20·15 → 상대가 이기면 15·50·20·15, 지면 65·0·20·15): 필요 승률 60.6%<br>④ 즉 내 올인 레인지의 60.6% 까지 블러프여도 상대는 콜로 이득을 못 본다 (단순화)", "mistake": "캐시에선 리버 블러프 비율이 상대 스택 상황과 상관없이 같은 공식이다. 그리고 '버블 = 조심'이라는 감각이 내가 칩리더일 때도 블러프를 줄이게 만든다. 조심해야 하는 건 상대(중간 스택)다 — 내가 큰 스택이면 그 조심을 이용한다.", "if_changes": "상대가 상금을 신경 쓰지 않는 사람(아무 페어나 콜)이면 이론과 상관없이 블러프를 줄인다 — 실제 사람의 콜 빈도가 이론보다 우선이다. 상대가 나보다 큰 스택이면 반대로 내가 조심할 쪽이다. 상금권에 들어간 뒤엔 이 차이가 줄어든다. 단순화 모델이라 실제 계산기와 몇 %p 다를 수 있다."}}]};
+const KEY = D.storage + D.version;
+const byId = {}; D.questions.forEach(q => byId[q.id] = q);
+const MAIN = D.questions.filter(q => q.set === "main").sort((a, b) => a.level - b.level);
+const POOL = D.questions.filter(q => q.set === "supp");
+const AREA = D.areas;
+const $app = document.getElementById("app");
+
+function fresh() { return { phase: "main", i: 0, picks: {}, supp: null }; }
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (!s || !["main", "summary", "supp", "done"].includes(s.phase) || typeof s.i !== "number" || !s.picks) return null;
+    if (s.supp && !s.supp.every(id => byId[id])) return null;
+    if ((s.phase === "supp" || s.phase === "done") && !s.supp) return null;
+    return s;
+  } catch (e) { return null; }
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+let st = load();
+// 「시작 전 한 장」 — 처음 여는 사람에게만 먼저 보인다(진행이 저장돼 있으면 문제로 바로). 머리의 「한 장」 버튼으로 언제든 다시.
+let viewIntro = D.intro.length > 0 && !st;
+st = st || fresh();
+
+function list() { return st.phase === "main" ? MAIN : (st.supp || []).map(id => byId[id]); }
+function pips(n, full) { let h = ""; for (let k = 0; k < full; k++) h += '<i class="' + (k < n ? "on" : "") + '"></i>'; return '<span class="pips">' + h + "</span>"; }
+
+function renderQuestion() {
+  const qs = list(), q = qs[st.i];
+  const picked = st.picks[q.id];
+  const done = picked !== undefined;
+  const label = st.phase === "main" ? "본 문제" : "보충 문제";
+  let h = '<div class="prog"><span>' + label + " " + (st.i + 1) + " / " + qs.length + '</span><span class="tag">' + q.area + ". " + AREA[q.area].name + "</span></div>";
+  h += '<div class="bar"><i style="width:' + ((st.i + (done ? 1 : 0)) / qs.length * 100) + '%"></i></div>';
+  h += '<div class="panel"><div class="game">' + q.game + "</div><dl class=\"facts\">";
+  h += "<div><dt>나</dt><dd><b>" + q.heroPos + "</b> " + (q.heroCards ? '<span class="big cards">' + q.heroCards + "</span>" : "") + (q.heroNote ? '<div class="game">' + q.heroNote + "</div>" : "") + "</dd></div>";
+  h += "<div><dt>상대</dt><dd>" + q.villains.map(v => '<span class="vil">' + v + "</span>").join("") + "</dd></div>";
+  h += '<div><dt>액션</dt><dd><ol class="act">' + q.action.map(a => "<li>" + a + "</li>").join("") + "</ol></dd></div>";
+  h += "<div><dt>팟</dt><dd><b>" + q.pot + "</b></dd></div>";
+  h += "<div><dt>보드</dt><dd>" + (q.board || '<span class="game">프리플랍 (보드 없음)</span>') + "</dd></div>";
+  h += "</dl></div>";
+  h += '<div class="q">' + q.question + "</div><div class=\"choices\">";
+  q.choices.forEach((c, k) => {
+    let cls = "choice";
+    if (done) {
+      if (q.answers.indexOf(k) !== -1) cls += " ok";
+      else if (k === picked) cls += " no";
+      else cls += " dim";
+    }
+    h += '<button type="button" class="' + cls + '" data-k="' + k + '"' + (done ? " disabled" : "") + '><span class="k">' + (done && q.answers.indexOf(k) !== -1 ? "✓" : done && k === picked ? "✗" : (k + 1)) + "</span><span>" + c + "</span></button>";
+  });
+  h += "</div>";
+  if (done) {
+    const ok = isCorrect(q, picked);
+    h += '<div class="verdict ' + (ok ? "ok" : "no") + '" id="verdict">' + (ok ? "정답" : "오답") + "</div>";
+    if (q.answers.length > 1) h += '<div class="split">정답이 하나가 아니다 — 허용 답 ' + q.answers.length + "개, 어느 쪽이든 1점</div>";
+    h += '<div class="panel ex">';
+    // 해설 네 칸 — 칸 이름은 데이터(labels), 칸 키 = 클래스(calc 는 숫자 정렬, mistake 는 강조)
+    ["why", "calc", "mistake", "if_changes"].forEach(k => {
+      h += '<section class="' + k + '"><h3>' + D.labels[k] + "</h3><p>" + q.ex[k] + "</p></section>";
+    });
+    h += "</div>";
+    const last = st.i === qs.length - 1;
+    h += '<button type="button" class="next" id="next">' + (last ? "결과 보기" : "다음 문제") + "</button>";
+  }
+  $app.innerHTML = h;
+  $app.querySelectorAll(".choice:not([disabled])").forEach(b => b.addEventListener("click", () => {
+    st.picks[q.id] = Number(b.dataset.k); save(); render();
+    const v = document.getElementById("verdict"); if (v) v.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+  const nx = document.getElementById("next");
+  if (nx) nx.addEventListener("click", () => {
+    if (st.i < qs.length - 1) st.i++;
+    else st.phase = st.phase === "main" ? "summary" : "done";
+    save(); render(); window.scrollTo(0, 0);
+  });
+}
+
+function scoreTable(qs) {
+  const sc = areaScores(qs, st.picks);
+  let tot = 0, full = 0, rows = "";
+  Object.keys(sc.full).map(Number).sort((a, b) => a - b).forEach(a => {
+    tot += sc.score[a]; full += sc.full[a];
+    rows += "<tr><td>" + a + ". " + AREA[a].name + "</td><td>" + pips(sc.score[a], sc.full[a]) + '</td><td class="n">' + sc.score[a] + " / " + sc.full[a] + "</td></tr>";
+  });
+  return { sc, tot, full, html: '<table class="score">' + rows + "</table>" };
+}
+
+function renderSummary() {
+  const t = scoreTable(MAIN);
+  const weak = weakAreas(t.sc);
+  let h = '<div class="panel"><h2>본 문제 결과</h2><div class="total">' + t.tot + " / " + t.full + "</div>" + t.html + "</div>";
+  h += '<div class="panel"><h2>약점</h2>';
+  if (weak.length) {
+    h += '<ul class="weak">' + weak.map(a => "<li><b>" + a + ". " + AREA[a].name + " — " + t.sc.score[a] + " / " + t.sc.full[a] + "</b>" + AREA[a].tip + "</li>").join("") + "</ul>";
+    h += '<p class="game" style="margin:10px 0 0">' + D.suppNote + "</p>";
+  } else {
+    h += '<p style="margin:0">전 영역 만점. 보충은 풀에서 가장 어려운 5문제로 낸다.</p>';
+  }
+  h += "</div>";
+  const ids = pickSupplement(t.sc, POOL, 5);
+  h += '<div class="panel"><h2>보충 5문제</h2><ol class="act">' + ids.map(id => "<li>" + byId[id].area + ". " + AREA[byId[id].area].name + "</li>").join("") + "</ol></div>";
+  h += '<button type="button" class="next" id="go">보충 5문제 시작</button>';
+  $app.innerHTML = h;
+  document.getElementById("go").addEventListener("click", () => {
+    st.supp = ids; st.phase = "supp"; st.i = 0; save(); render(); window.scrollTo(0, 0);
+  });
+}
+
+function renderDone() {
+  const m = scoreTable(MAIN), s = scoreTable(st.supp.map(id => byId[id]));
+  let h = '<div class="panel"><h2>보충 문제 결과</h2><div class="total">' + s.tot + " / " + s.full + "</div>" + s.html + "</div>";
+  h += '<div class="panel"><h2>본 문제 결과</h2><div class="total">' + m.tot + " / " + m.full + "</div>" + m.html + "</div>";
+  h += '<button type="button" class="next" id="again">처음부터 다시</button>';
+  $app.innerHTML = h;
+  document.getElementById("again").addEventListener("click", restart);
+}
+
+function renderIntro() {
+  let h = '<div class="panel"><h2>시작 전 한 장</h2><ul class="intro">';
+  h += D.intro.map(x => "<li><b>" + x.head + "</b>" + x.body + "</li>").join("") + "</ul></div>";
+  h += '<button type="button" class="next" id="start">' + (Object.keys(st.picks).length ? "풀던 문제로" : "문제 시작") + "</button>";
+  $app.innerHTML = h;
+  document.getElementById("start").addEventListener("click", () => { viewIntro = false; render(); window.scrollTo(0, 0); });
+}
+
+function restart() { st = fresh(); viewIntro = D.intro.length > 0; save(); render(); window.scrollTo(0, 0); }
+function render() {
+  if (viewIntro) renderIntro();
+  else if (st.phase === "main" || st.phase === "supp") {
+    if (st.i >= list().length) st.i = 0;
+    renderQuestion();
+  } else if (st.phase === "summary") renderSummary();
+  else renderDone();
+}
+document.getElementById("reset").addEventListener("click", () => { if (confirm("처음부터 다시 풀까? 지금까지의 답은 지워진다.")) restart(); });
+if (D.intro.length) {
+  const ib = document.getElementById("intro");
+  ib.hidden = false;
+  ib.addEventListener("click", () => { viewIntro = true; render(); window.scrollTo(0, 0); });
+}
+render();
+</script>
+</body>
+</html>

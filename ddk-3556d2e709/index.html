@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>딱따구리 웃음 랭킹</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* 레이아웃: 클라이밍 벽 위에 붙은 수집 카드. 순위 = 홀드 난이도 색(파랑→빨강→보라→갈색→회색→검정). 카드(앞) + 판정문(옆) */
+:root{
+  --wall:#ECEEE9; --panel:#F9FAF7; --ink:#1B1E1C; --muted:#5C635D; --line:#D2D7D0;
+  --peck:#B8322A; --chalk:#FFFFFF; --gold:#C99A2E;
+  --g-blue:#2F6FD6; --g-red:#C93A2A; --g-purple:#7B4BC4; --g-brown:#8A5A33; --g-gray:#6F7873; --g-black:#1B1E1C;
+  --on-c:#FFFFFF;
+  --display:"Black Han Sans","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --wall:#141716; --panel:#1D2120; --ink:#ECEFEA; --muted:#A2A9A3; --line:#454C49;
+  --peck:#F0594C; --chalk:#E9ECE6; --gold:#E2B852;
+  --g-blue:#2F6BD0; --g-red:#C9432F; --g-purple:#7E4FCC; --g-brown:#8E5F38; --g-gray:#5F6863; --g-black:#0B0C0C;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --wall:#141716; --panel:#1D2120; --ink:#ECEFEA; --muted:#A2A9A3; --line:#454C49;
+  --peck:#F0594C; --chalk:#E9ECE6; --gold:#E2B852;
+  --g-blue:#2F6BD0; --g-red:#C9432F; --g-purple:#7E4FCC; --g-brown:#8E5F38; --g-gray:#5F6863; --g-black:#0B0C0C;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--wall);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.65;
+  background-image:radial-gradient(circle at 14px 14px, var(--line) 2px, transparent 2.6px);background-size:52px 52px}
+.wrap{max-width:960px;margin:0 auto;padding-inline:16px;padding-block:28px 72px;display:grid;gap:52px}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0;line-height:1.18}
+p{margin:0}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* 머리 */
+header{display:grid;gap:16px}
+.eyebrow{font-size:13px;letter-spacing:.14em;color:var(--peck);font-weight:700}
+h1{font-size:clamp(42px,10vw,84px);letter-spacing:-.01em}
+h1 .peck{color:var(--peck);display:inline-block;transform-origin:20% 90%}
+.lede{max-width:60ch;color:var(--muted)}
+.facts{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px;color:var(--muted)}
+.facts b{color:var(--ink);font-family:var(--mono)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:inherit;cursor:pointer}
+.btn{border:2px solid var(--ink);background:var(--ink);color:var(--wall);padding:11px 20px;border-radius:999px;font-weight:700;min-height:44px}
+.btn.ghost{background:transparent;color:var(--ink)}
+button:focus-visible{outline:3px solid var(--peck);outline-offset:3px}
+.hint{font-size:13px;color:var(--muted)}
+
+/* 시상대 */
+.podium{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-items:end}
+.pod{display:grid;gap:6px;justify-items:center;text-align:center;min-width:0;text-decoration:none;color:inherit}
+.pod .bar{width:100%;border-radius:12px 12px 4px 4px;background:var(--c);display:grid;place-items:center;color:var(--on-c);font-family:var(--display);font-size:24px;
+  box-shadow:inset 0 -6px 0 rgb(0 0 0 / .18)}
+.pod .nm{font-weight:700;font-size:15px}
+.pod .sc{font-size:12px;color:var(--muted)}
+.pod:hover .bar{filter:brightness(1.08)}
+@media (max-width:520px){.pod .bar{font-size:18px}.pod .nm{font-size:13px}}
+
+/* 순위 한 칸 = 카드 + 판정문 */
+.entry{display:grid;grid-template-columns:300px minmax(0,1fr);gap:26px;align-items:start;scroll-margin-top:24px}
+@media (min-width:761px){.tc{position:sticky;top:24px}}
+@media (max-width:760px){.entry{grid-template-columns:minmax(0,1fr)}.tc{max-width:340px;margin-inline:auto;width:100%}}
+
+/* 수집 카드 */
+.tc{position:relative;perspective:900px;outline:none}
+.tc-in{position:relative;border-radius:20px;padding:10px;background:var(--c);color:var(--on-c);
+  box-shadow:0 2px 0 rgb(0 0 0 / .12),0 22px 40px -22px rgb(0 0 0 / .55);transform-style:preserve-3d;transition:transform .25s ease, box-shadow .35s ease}
+.tc.lit .tc-in{box-shadow:0 0 0 4px var(--chalk),0 0 0 7px var(--c),0 26px 50px -18px var(--c)}
+.face{border-radius:14px;background:rgb(255 255 255 / .08);border:1.5px solid rgb(255 255 255 / .35);padding:16px 16px 14px;display:grid;gap:12px;position:relative;overflow:hidden}
+.face-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;letter-spacing:.06em}
+.rk{font-family:var(--display);font-size:20px;letter-spacing:0}
+.art{height:120px;border-radius:10px;background:rgb(0 0 0 / .16);display:grid;place-items:center;position:relative;overflow:hidden}
+.blob{width:84px;height:76px;background:var(--chalk);opacity:.92;border-radius:46% 54% 42% 58% / 55% 45% 55% 45%;display:grid;place-items:center;
+  color:#1B1E1C;font-family:var(--display);font-size:34px;box-shadow:inset 0 0 0 3px var(--c),inset -6px -8px 0 rgb(0 0 0 / .12);cursor:pointer;border:none;padding:0;position:relative;z-index:1;transition:transform .15s;animation:nudge 1.1s ease-in-out 1.2s 3}
+@keyframes nudge{0%,100%{transform:rotate(0)}20%{transform:rotate(-9deg) scale(1.05)}40%{transform:rotate(7deg)}60%{transform:rotate(-4deg)}}
+.tap{position:absolute;right:12px;bottom:10px;font-size:11px;font-weight:700;background:var(--chalk);color:#1B1E1C;border-radius:999px;padding:2px 9px;z-index:2}
+.blob:active{transform:scale(.92)}
+.bolt{position:absolute;width:9px;height:9px;border-radius:50%;background:rgb(0 0 0 / .35)}
+.nmrow h3{font-size:34px;color:var(--on-c)}
+.nmrow .tt{font-weight:700;font-size:14px;opacity:.95}
+.one{background:var(--chalk);color:#1B1E1C;border-radius:10px;padding:10px 12px;font-size:14px;font-weight:700;line-height:1.5}
+.one small{display:block;font-size:11px;letter-spacing:.08em;color:#555C56;font-weight:700;margin-bottom:2px}
+.cstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;text-align:center}
+.cstats div{background:rgb(0 0 0 / .18);border-radius:8px;padding:6px 2px;display:grid}
+.cstats b{font-family:var(--mono);font-size:17px}
+.cstats span{font-size:10.5px;opacity:.9}
+.foot{display:flex;justify-content:space-between;font-size:11px;opacity:.85}
+/* 1위 홀로그램 */
+.holo .tc-in{box-shadow:0 0 0 2.5px var(--gold),0 22px 40px -22px rgb(0 0 0 / .55)}
+.pod.p1 .bar{box-shadow:inset 0 0 0 2.5px var(--gold),inset 0 -6px 0 rgb(0 0 0 / .18)}
+.holo .face::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 35%,rgb(255 230 150 / .35) 45%,rgb(150 220 255 / .3) 52%,rgb(255 160 220 / .3) 58%,transparent 68%);
+  transform:translateX(var(--hx,-30%));pointer-events:none;mix-blend-mode:screen;animation:sheen 4.5s ease-in-out 3}
+@keyframes sheen{0%,100%{transform:translateX(-35%)}50%{transform:translateX(35%)}}
+.crown{position:absolute;top:-16px;left:50%;transform:translateX(-50%);background:var(--gold);color:#1B1E1C;font-family:var(--display);font-size:14px;padding:4px 14px;border-radius:999px;z-index:2;box-shadow:0 4px 10px -4px rgb(0 0 0 / .5)}
+
+/* 판정문 */
+.verdict{display:grid;gap:16px;min-width:0}
+.vhead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.vhead h2{font-size:clamp(26px,5vw,34px)}
+.chip{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--c);color:var(--on-c)}
+.label{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--peck)}
+.oneline{font-size:clamp(18px,3.4vw,21px);font-weight:700;line-height:1.5;max-width:44ch}
+.detail{display:grid;gap:10px;padding:0;margin:0;list-style:none;max-width:66ch}
+.detail li{position:relative;padding-left:22px}
+.detail li::before{content:"";position:absolute;left:2px;top:.62em;width:10px;height:10px;border-radius:46% 54% 42% 58%;background:var(--c)}
+.detail b{font-family:var(--mono);font-weight:600}
+.scenes{display:grid;gap:10px}
+.sc-item{display:grid;gap:3px}
+.bubble{justify-self:start;max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:8px 13px;font-weight:500;overflow-wrap:anywhere}
+.sc-item span{font-size:12px;color:var(--muted);padding-left:4px}
+.flip{background:var(--panel);border:1px dashed var(--c);border-radius:12px;padding:10px 14px;font-size:14px;max-width:66ch}
+.flip b{color:var(--c2,var(--ink))}
+.rd summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink);min-height:36px;display:flex;align-items:center}
+.radarbox{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.radarbox svg{width:190px;height:170px;flex:none}
+.radarbox .leg{font-size:12px;color:var(--muted);display:grid;gap:2px;min-width:0}
+
+/* 구간 */
+section.block{display:grid;gap:16px}
+section.block>h2{font-size:clamp(28px,5.5vw,40px)}
+.sub{color:var(--muted);max-width:64ch}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch}
+.vs .side{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:8px;min-width:0}
+.vs .mid{font-family:var(--display);font-size:38px;color:var(--peck);align-self:center}
+.vs .side h3{font-size:26px;display:flex;gap:8px;align-items:center}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:14px;border-bottom:1px dashed var(--line);padding-bottom:4px}
+.row b{font-family:var(--mono)}
+.win{color:var(--peck)}
+.stamp{font-size:12px;background:var(--peck);color:#fff;border-radius:999px;padding:2px 10px;font-family:var(--body)}
+@media (max-width:560px){.vs{grid-template-columns:1fr}.vs .mid{justify-self:center}}
+.callout{background:var(--panel);border:2px solid var(--peck);border-radius:16px;padding:16px 18px;display:grid;gap:8px;max-width:72ch}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;font-size:14px;min-width:540px;width:100%}
+th,td{padding:9px 10px;text-align:center;border-bottom:1px solid var(--line)}
+th{font-weight:700;color:var(--muted);font-size:12px}
+td.h{font-family:var(--mono);font-weight:600}
+.name{text-align:left}
+@media (max-width:520px){table{min-width:0;font-size:12px}th,td{padding:7px 3px}th{font-size:11px}}
+.fun{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+@media (max-width:520px){.fun{grid-template-columns:repeat(2,minmax(0,1fr))}.fun .big{font-size:24px}}
+.fun div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:4px}
+.fun .big{font-family:var(--display);font-size:32px;line-height:1.1}
+.fun .s{font-size:13px;color:var(--muted)}
+.method{font-size:14px;color:var(--muted);display:grid;gap:8px;max-width:72ch}
+.method b{color:var(--ink)}
+footer{font-size:12px;color:var(--muted);text-align:center}
+
+.pop{position:absolute;left:50%;top:0;transform:translate(-50%,0);font-family:var(--display);color:var(--chalk);font-size:24px;pointer-events:none;z-index:3;
+  text-shadow:0 2px 0 rgb(0 0 0 / .35);animation:pop .7s ease-out forwards}
+@keyframes pop{from{opacity:1;transform:translate(-50%,0) scale(.8)}to{opacity:0;transform:translate(-50%,-40px) scale(1.3)}}
+canvas#chalk{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+@media (prefers-reduced-motion: reduce){.tc-in{transition:none}.holo .face::after{animation:none}.pop{animation:none;opacity:0}}
+</style>
+</head><body>
+
+
+<canvas id="chalk" aria-hidden="true"></canvas>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">딱따구리 클라이밍 방 · 2026.06.11 – 10.13</div>
+  <h1>누가 제일 <span class="peck" id="peckword">웃기냐</span></h1>
+  <p class="lede">10월 13일 오후, 윤후와 영효의 「노잼 결승전」이 결론 없이 끝났다. 그래서 넉 달 치 대화 44,275줄을 전부 셌다. 누가 말한 뒤 다른 사람이 「ㅋㅋ」로 반응했는지를 한 줄씩 따라가 점수를 냈다. 순위는 이 방 단골 홀드 색으로 매겼다. 파랑에서 출발해 검정이 1위다.</p>
+  <div class="facts">
+    <span>메시지 <b>44,275</b></span><span>웃음 점수 <b>5,716</b>점</span><span>기간 <b>125</b>일</span><span>참가자 <b>6</b>명</span>
+  </div>
+  <div class="controls">
+    <button id="show" class="btn" type="button">6위부터 발표하기</button>
+    <button id="stop" class="btn ghost" type="button" hidden>멈추기</button>
+    <span class="hint">카드 가운데 홀드를 눌러 보세요</span>
+  </div>
+</header>
+
+<section class="block" aria-label="한눈에 보는 순위">
+  <div class="podium" id="podium"></div>
+</section>
+
+<div id="route" style="display:grid;gap:64px"></div>
+
+<section class="block">
+  <h2>노잼 결승전: 윤후 vs 영효</h2>
+  <p class="sub">10월 13일 투표는 3:0으로 윤후 승이었다. 넉 달 치 데이터는 다르게 말한다.</p>
+  <div class="vs">
+    <div class="side">
+      <h3>영효 <span class="stamp">데이터 승</span></h3>
+      <div class="row"><span>말 100번당 웃음 점수</span><b class="win">28.2</b></div>
+      <div class="row"><span>받은 웃음 총점</span><b class="win">1,467</b></div>
+      <div class="row"><span>크게 터진 웃음 (1,000번당)</span><b class="win">1.3</b></div>
+      <div class="row"><span>자기 말에 자기가 웃은 비율</span><b>18%</b></div>
+    </div>
+    <div class="mid">VS</div>
+    <div class="side">
+      <h3>윤후</h3>
+      <div class="row"><span>말 100번당 웃음 점수</span><b>19.3</b></div>
+      <div class="row"><span>받은 웃음 총점</span><b>916</b></div>
+      <div class="row"><span>크게 터진 웃음 (1,000번당)</span><b>1.1</b></div>
+      <div class="row"><span>자기 말에 자기가 웃은 비율</span><b>21%</b></div>
+    </div>
+  </div>
+  <div class="callout">
+    <p><b>판정: 영효 승.</b> 네 지표 중 세 개에서 영효가 앞선다.</p>
+    <p><b>반전:</b> 윤후가 이 방에서 가장 많이 웃어 준 상대가 영효다(984점). 다른 사람에게 웃는 것보다 15% 더 영효에게 웃었다. 영효가 가장 많이 웃어 준 상대도 윤후다(533점). 서로를 노잼이라 부르는 두 사람이 사실 서로의 1등 관객이다.</p>
+    <p><b>영효가 조심할 점:</b> 윤후의 웃음을 빼고 다시 세면 영효 점수는 28.2에서 9.3으로 떨어진다. 영효 개그의 3분의 2는 윤후가 받쳐 주고 있다.</p>
+  </div>
+</section>
+
+<section class="block">
+  <h2>누가 누구한테 잘 웃나</h2>
+  <p class="sub">칸의 숫자는 「기대보다 몇 배 웃었나」다. 1.00이면 그 사람이 말한 양만큼 웃은 것이고, 빨갛게 진할수록 그 사람 말에 유독 잘 웃는다는 뜻이다. 정엽은 웃어 준 점수가 18점뿐이라 줄에서 뺐다.</p>
+  <div class="tbl"><table id="heat"></table></div>
+</section>
+
+<section class="block">
+  <h2>쓸데없이 정확한 기록</h2>
+  <div class="fun">
+    <div><span class="s">넉 달 동안 친 「ㅋ」</span><span class="big mono" data-count="16829">16,829</span><span class="s">윤후. 2위 영효(6,776)의 2.5배</span></div>
+    <div><span class="s">한 번에 친 「ㅋ」 최장 기록</span><span class="big mono">77개</span><span class="s">준기, 10월 12일</span></div>
+    <div><span class="s">이 방 웃음 중 윤후가 낸 몫</span><span class="big mono">46%</span><span class="s">5,716점 중 2,617점</span></div>
+    <div><span class="s">새벽 0–5시에 보낸 메시지 비율</span><span class="big mono">30%</span><span class="s">정엽. 나머지 다섯은 3–6%</span></div>
+    <div><span class="s">「허접」이라고 쓴 횟수</span><span class="big mono">49번</span><span class="s">준기. 2위 영효 28번</span></div>
+    <div><span class="s">자기 말에 자기가 웃은 비율 최저</span><span class="big mono">5.8%</span><span class="s">윤기. 가장 무표정하게 친다</span></div>
+  </div>
+</section>
+
+<section class="block">
+  <h2>어떻게 셌나</h2>
+  <div class="method">
+    <p><b>1. 말 묶기.</b> 같은 사람이 2분 안에 연달아 보낸 줄은 말 한 번으로 묶었다. 「ㅋㅋ」나 「사진」만 있는 말은 개그가 아니므로 분모에서 뺐다.</p>
+    <p><b>2. 웃음 따라가기.</b> 누가 말한 뒤 5분 안에 다른 사람이 「ㅋㅋ」, 「개웃기」, 「미쳤」 같은 반응을 보이면 그 말에 점수를 줬다. 「ㅋ」 6개 이상이나 「개웃」은 2점, 그보다 약하면 1점이다. 같은 사람이 한 말에 여러 번 웃어도 한 번만 친다.</p>
+    <p><b>3. 종합 점수.</b> 말 100번당 웃음 점수(효율) 50%, 크게 터진 웃음 25%, 받은 웃음 총량 25%로 합쳐 100점 만점으로 매겼다. 말을 적게 한 사람은 몇 번 운 좋게 터진 것만으로 위로 가지 않게 평균 쪽으로 당겨 계산했다.</p>
+    <p><b>4. 흔들어 보기.</b> 웃어 준 사람을 한 명씩 빼고 다시 셌다. 준기·윤기·승지는 누구를 빼도 1–4위 안에 남았고, 윤후는 늘 꼴찌였다.</p>
+    <p><b>못 잰 것.</b> 만나서 한 농담, 사진과 이모티콘 자체의 재미, 웃었지만 「ㅋ」를 안 친 경우는 셀 수 없다. 이 순위는 「카톡에서 남을 웃긴 기록」이다.</p>
+  </div>
+</section>
+
+<footer>딱따구리 방 카톡 내보내기(2026-10-13 16:48 저장본)로 계산</footer>
+</div>
+
+<script>
+const P=[
+ {r:6,n:"윤후",g:"파랑",c:"--g-blue",t:"이 방의 웃음 엔진",s:57.2,eff:19.3,big:1.1,tot:916,self:21,given:2617,turns:4750,
+  one:"웃기는 사람보다 웃어 주는 사람이다. 이 방 웃음의 절반 가까이가 윤후한테서 나온다.",
+  det:["말 100번당 받은 웃음이 <b>19.3점</b>으로 여섯 중 가장 낮다. 1위 준기(<b>32.5</b>)의 60% 수준이다.","대신 다른 사람에게 웃어 준 점수가 <b>2,617점</b>으로 압도적 1위다. 방 전체 웃음의 <b>46%</b>, 2위 영효(1,636)의 1.6배다.","윤후의 웃음을 빼고 세면 다른 다섯 명의 점수가 <b>45–67%</b> 줄어든다. 윤후가 없으면 이 방 개그맨들은 빈 객석 앞에서 떠드는 셈이다.","윤후가 터뜨린 웃음은 대부분 한두 단어짜리 받아치기다. 길게 설명하는 개그보다 짧은 반사가 잘 먹힌다."],
+  q:[["영효형 / 대답하고싶은거만 하시네요","08.04 · 준기·영효 웃음"],["3배요..? → 10배","08.05 · 준기·영효 웃음"],["회색난이도가 생겨요?","10.13 · 영효 웃음"],["형님의 위치를 아십쇼! 핵노잼영효형!","10.13 · 결승전 당일"]],
+  flip:"순위가 바뀌려면: 「ㅋㅋㅋ」로 받아 주는 말을 줄이고 받아치는 말을 늘려야 한다. 지금은 윤후의 말 상당수가 남을 웃게 하는 말이 아니라 남에게 웃어 주는 말이다."},
+ {r:5,n:"정엽",g:"빨강",c:"--g-red",t:"새벽의 비밀병기",s:64.8,eff:30.8,big:4.0,tot:78,self:6,given:18,turns:253,
+  one:"말만 하면 잘 터진다. 그런데 넉 달 동안 말한 횟수가 너무 적다.",
+  det:["7월 2일에 들어와 말한 횟수가 <b>253번</b>뿐이다. 다른 다섯은 <b>1,467–5,210번</b>이다.","한 번 말할 때의 성적은 좋다. 말 100번당 웃음 <b>30.8점</b>으로 원래 수치는 3위다.","크게 터진 웃음은 원래 수치로 1위(1,000번당 <b>4.0</b>)지만 그게 <b>1번</b>이다. 한 번의 운으로 1위가 되지 않게 평균 쪽으로 당겨 계산했고, 그래서 5위다.","메시지의 <b>30%</b>를 새벽 0–5시에 보낸다. 다른 다섯은 3–6%다."],
+  q:[["케베 언제.??","08.20 · 「영효는 퇴출」 얘기 한가운데서"],["두문제 냈다...세신데","08.20 · 윤후 대폭소"],["카톡이 자가증식해...","09.16 · 잠깐 일하다 왔더니 200개"],["회색은 이틀넘게붙어야하는뎅..","07.02 · 준기 웃음"]],
+  flip:"순위가 바뀌려면: 지금 성적 그대로 말을 1,000번 더 하면 윤기와 4위를 다툰다. 가장 크게 오를 수 있는 사람이다."},
+ {r:4,n:"윤기",g:"보라",c:"--g-purple",t:"과묵한 저격수",s:76.8,eff:31.8,big:3.4,tot:466,self:6,given:227,turns:1467,
+  one:"한 마디 적중률은 2위다. 다만 말을 너무 아껴서 웃음 총량에서 밀렸다.",
+  det:["말 100번당 웃음 <b>31.8점</b>으로 효율 2위다. 1위 준기(<b>32.5</b>)와 거의 같다.","크게 터진 웃음도 1,000번당 <b>3.4</b>로 3위다.","문제는 양이다. 넉 달 동안 말한 횟수가 <b>1,467번</b>으로 승지·영효의 3분의 1이라, 받은 웃음 총점이 <b>466점</b>으로 5위다.","자기 말에 자기가 웃은 비율이 <b>5.8%</b>로 가장 낮다. 던지고 나서 무표정으로 서 있는 타입이다. 이 분석을 맡긴 사람이지만 봐주지 않았다."],
+  q:[["윤후는 원래 베이스가 노잼이라 가끔 잼씀 / 영효는 노잼인데 재밌는척해서 더 노잼","10.12 · 이번 결승전을 연 한 줄"],["윤기형 여친 구해요 윤여구","07.30 · 방 이름 바꾸기 시간"],["…모든 보라를 해야합니다. 그런식으로 하면 천종원이 세계1등이었겠죠","06.30 · 영효·윤후 웃음"],["옙 꼴찌 영효가 기대가 되어요","07.24"]],
+  flip:"순위가 바뀌려면: 지금 적중률 그대로 승지만큼 말했다면 준기와 1위를 다퉜다. 계산상으로는 1위도 가능했다."},
+ {r:3,n:"영효",g:"갈색",c:"--g-brown",t:"웃음 자석",s:79.3,eff:28.2,big:1.3,tot:1467,self:18,given:1636,turns:5210,
+  one:"웃음 총량 2위다. 다만 영효가 웃겨서보다 영효 «때문에» 터진 웃음이 많다.",
+  det:["받은 웃음 총점 <b>1,467점</b>으로 2위다. 「노잼인데 재밌는 척」이라는 평과 달리 이 방에서 두 번째로 많은 웃음을 받았다.","사람들이 말한 양에 비해 더 웃어 주는 정도가 <b>1.11배</b>로 여섯 중 1위다. 다만 지각, 약속 잡기, 키보드 여포처럼 영효 본인이 소재가 되는 장면에서 많이 터졌다. 승지 말로 「타격감이 좋은 편」이다.","말을 가장 많이 해서(<b>5,210번</b>) 효율은 <b>28.2점</b>, 5위로 떨어진다.","점수의 <b>3분의 2</b>를 윤후가 웃어 줘서 받았다. 윤후를 빼고 세면 9.3점이다."],
+  q:[["오늘 회사 9년만에 처음지각함","08.26 · 「힘캐는 여행 다녀오면 약해진다」 설명하다가"],["윤후오면 2시 ㅋㅋㅋㅋ","07.29 · 윤후·준기 동시 폭소"],["내가 키보드 여포임","07.30 · 「키보드워리어」 소리 듣고"],["물엇다고 싸우면,,,,,,,,내가 사과할게 ㅋㅋㅋ","10.13"]],
+  flip:"순위가 바뀌려면: 효율이 준기만큼 올라도 3위다. 영효에게 부족한 건 말 수가 아니라 크게 터지는 한 방이다(1,000번당 1.3으로 다섯째)."},
+ {r:2,n:"승지",g:"회색",c:"--g-gray",t:"무표정 화력왕",s:92.0,eff:30.0,big:2.9,tot:1529,self:12,given:719,turns:5091,
+  one:"넉 달 동안 이 방에서 웃음을 가장 많이 받았다. 표정 하나 안 바꾸고 친다.",
+  det:["받은 웃음 총점 <b>1,529점</b>으로 1위다. 말을 많이 하면서도(<b>5,091번</b>) 효율을 <b>30.0점</b>으로 지켰다. 말 수가 많은 셋(영효·승지·윤후) 중 효율이 가장 높다.","「ㅋ」를 거의 안 친다. 메시지 11,698개에 「ㅋ」 <b>2,158개</b>로 윤후의 8분의 1이다. 일정 정리하다 한 줄씩 비트는 무표정 직구가 주 무기다.","맞을 때도 웃긴다. 준기 말로 「다구리 당해서 화나 있을 때가 재밌는 거」다.","10월 13일에 준기는 「역시 승지가 제일웃김」, 윤기는 「승지가 재밌지」라고 따로 말했다. 데이터와 방 여론이 같은 곳을 가리키는 유일한 사람이다."],
+  q:[["유누 출근 하고 심심하니까 톡방 확인 하네 ㅋㅋ","08.13 · 윤후·영효 폭소"],["영효형은 티셔츠 한 장때문에 약속 어기는 사람 → 그렇게 하면 가질 수 있을 거라 생각했어요?","10.06"],["내가볼떈 윤기형이 가장 편식 심함","09.16 · 윤후 대폭소"],["난 윤기형 부하라서 가야함. 윤기형의 긍정 바이브를 세뇌 당해야 해","08.21"]],
+  flip:"1위와의 차이는 3.6점이다. 넉 달 동안 크게 터진 웃음이 3번만 더 있었으면 1위가 바뀌었다."},
+ {r:1,n:"준기",g:"검정",c:"--g-black",t:"팩폭 저격수",s:95.6,eff:32.5,big:3.9,tot:1260,self:7,given:499,turns:3882,
+  one:"말할 때마다 가장 확실하게 웃음이 돌아온다. 남을 오래 보다가 한 줄로 정리해 버린다.",
+  det:["말 100번당 웃음 <b>32.5점</b>으로 효율 1위다. 말한 횟수는 넷째(<b>3,882번</b>)인데 한 번 말할 때의 성적이 가장 좋다.","크게 터진 웃음도 1,000번당 <b>3.9</b>로 사실상 1위다. 원래 수치 1위인 정엽은 그게 1번이라 운의 몫이 크다.","웃어 준 사람을 한 명씩 빼고 다시 세도 늘 <b>1–3위</b> 안이다. 특정 한 사람만 웃겨서 나온 점수가 아니다.","자기 말에 자기가 웃은 비율이 <b>7%</b>다. 웃음이 거의 다 남에게서 나온다.","화법은 관찰 후 한 줄 요약이다. 영효, 승지, 내기 구조까지 한 문장으로 정리하면 방이 터진다."],
+  q:[["영효 특징 내가 찾아냄... 한마디로 본인이 배에 구멍낸다음 본인이 다시 수리함","10.13 · 윤후가 「ㅋ」 34개로 응답"],["승지가 운동70 훈련30 이아니라, 훈련99 운동1이라서그럼","07.01 · 윤후·영효 폭소"],["딱히 썰없어도 영효가 거의 키보드워리어라서 … 끝이없음 일을안함영효","07.30"],["근데 이게 그냥 5vs1이자나","08.20 · 내기 구조를 한 번에 간파"]],
+  flip:"1위를 지키려면: 받은 웃음 총량은 3위(1,260점)다. 승지가 크게 터진 웃음을 3번만 더 냈어도 자리가 바뀌었다. 차이는 3.6점이다."}
+];
+const v=x=>`var(${x})`;
+
+// 시상대
+const pod=document.getElementById('podium');
+P.forEach(p=>{
+  const a=document.createElement('a');a.className='pod'+(p.r===1?' p1':'');a.href='#rank'+p.r;a.style.setProperty('--c',v(p.c));
+  a.innerHTML=`<div class="bar" style="height:${Math.round(40+(p.s-50)/50*150)}px">${p.r}</div><div class="nm">${p.n}</div><div class="sc mono">${p.s.toFixed(1)}</div>`;
+  pod.appendChild(a);
+});
+
+// 레이더: 효율·터짐·총량·무표정·관객력 (각 축 = 여섯 중 최대값 대비)
+const AX=[["효율","eff"],["터짐","big"],["총량","tot"],["무표정",p=>25-p.self],["관객력","given"]];
+const val=(p,k)=>typeof k==='function'?k(p):p[k];
+const MX=AX.map(([,k])=>Math.max(...P.map(p=>val(p,k))));
+function radar(p){
+  const cx=95,cy=88,R=62,n=AX.length;
+  const pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/n;return[cx+Math.cos(a)*r,cy+Math.sin(a)*r]};
+  let g='';
+  [1,.66,.33].forEach(f=>{g+=`<polygon points="${AX.map((_,i)=>pt(i,R*f).join(',')).join(' ')}" fill="none" stroke="var(--line)" stroke-width="1"/>`});
+  AX.forEach(([l],i)=>{const[x,y]=pt(i,R);const[tx,ty]=pt(i,R+16);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/><text x="${tx}" y="${ty+4}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans KR, sans-serif">${l}</text>`});
+  const pts=AX.map(([,k],i)=>pt(i,R*Math.max(.06,val(p,k)/MX[i])).join(',')).join(' ');
+  g+=`<polygon points="${pts}" fill="${v(p.c)}" fill-opacity=".5" stroke="${v(p.c)}" stroke-width="2.5" stroke-linejoin="round"/><polygon points="${pts}" fill="none" stroke="var(--ink)" stroke-opacity=".5" stroke-width="1"/>`;
+  return `<svg viewBox="0 0 190 170" role="img" aria-label="${p.n} 개그 스타일 레이더">${g}</svg>`;
+}
+
+// 순위 칸 (1위가 맨 위 = 벽 꼭대기)
+const route=document.getElementById('route');
+[...P].reverse().forEach(p=>{
+  const el=document.createElement('article');el.className='entry';el.id='rank'+p.r;el.style.setProperty('--c',v(p.c));
+  el.innerHTML=`
+  <div class="tc ${p.r===1?'holo':''}" tabindex="-1">
+    ${p.r===1?'<div class="crown">딱따구리 개그왕</div>':''}
+    <div class="tc-in"><div class="face">
+      <div class="face-top"><span class="rk">${p.r}위</span><span>${p.g} 홀드 · ${p.s.toFixed(1)}점</span></div>
+      <div class="art">
+        <span class="bolt" style="left:18px;top:16px"></span><span class="bolt" style="right:22px;top:28px"></span><span class="bolt" style="left:40px;bottom:18px"></span><span class="bolt" style="right:36px;bottom:14px"></span>
+        <button class="blob" type="button" aria-label="${p.n} 홀드 누르기">${p.n[0]}</button>${p.r===1?'<span class="tap">눌러 봐</span>':''}
+      </div>
+      <div class="nmrow"><h3>${p.n}</h3><div class="tt">${p.t}</div></div>
+      <div class="one"><small>한 줄 이유</small>${p.one}</div>
+      <div class="cstats">
+        <div><b>${p.eff}</b><span>말 100번당 웃음</span></div>
+        <div><b>${p.tot.toLocaleString()}</b><span>받은 웃음</span></div>
+        <div><b>${p.self}%</b><span>셀프 웃음</span></div>
+      </div>
+      <div class="foot"><span>딱따구리 2026</span><span>No.${String(7-p.r).padStart(2,'0')}/06</span></div>
+    </div></div>
+  </div>
+  <div class="verdict">
+    <div class="vhead"><h2>${p.r}위 ${p.n}</h2><span class="chip">${p.t}</span></div>
+        <div><div class="label" style="margin-bottom:8px">자세한 이유</div><ul class="detail">${p.det.map(d=>`<li>${d}</li>`).join('')}</ul></div>
+    <details class="rd"><summary>개그 스타일 그래프 보기</summary><div class="radarbox">${radar(p)}<div class="leg"><span>효율: 말 100번당 웃음</span><span>터짐: 크게 터진 웃음</span><span>총량: 받은 웃음 합계</span><span>무표정: 자기 말에 안 웃기</span><span>관객력: 남에게 웃어 준 양</span></div></div></details>
+    <div><div class="label" style="margin-bottom:8px">명장면</div><div class="scenes">${p.q.map(([a,b])=>`<div class="sc-item"><div class="bubble">${a}</div><span>${b}</span></div>`).join('')}</div></div>
+    <p class="flip">${p.flip}</p>
+  </div>`;
+  route.appendChild(el);
+});
+
+// 웃음 행렬 (행 = 웃은 사람, 열 = 웃긴 사람)
+const L={윤후:{승지:.94,영효:1.15,준기:.89,윤기:.99,정엽:.98},승지:{윤후:.95,영효:1.03,준기:1.07,윤기:.90,정엽:.68},
+         영효:{윤후:1.06,승지:.94,준기:1.11,윤기:.82,정엽:.49},준기:{윤후:.81,승지:1.09,영효:1.10,윤기:.85,정엽:1.59},
+         윤기:{윤후:.98,승지:1.08,영효:1.01,준기:.89,정엽:1.34}};
+const cols=["준기","승지","영효","윤기","정엽","윤후"];
+let h=`<thead><tr><th class="name">웃은 사람 ↓ · 웃긴 사람 →</th>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+for(const r in L){h+=`<tr><td class="name"><b>${r}</b></td>`;cols.forEach(c=>{
+  if(c===r){h+=`<td style="color:var(--muted)">—</td>`;return}
+  const x=L[r][c],a=Math.min(.6,Math.abs(x-1)*1.2),col=x>=1?'var(--peck)':'var(--g-blue)';
+  h+=`<td class="h" style="background:color-mix(in srgb, ${col} ${Math.round(a*100)}%, transparent)">${x.toFixed(2)}</td>`});h+='</tr>'}
+document.getElementById('heat').innerHTML=h+'</tbody>';
+
+// 분필 가루
+const cv=document.getElementById('chalk'),cx=cv.getContext('2d');let parts=[],raf=0;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function size(){const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;cx.setTransform(d,0,0,d,0,0)}
+size();addEventListener('resize',size);
+const chalkCol=()=>getComputedStyle(document.documentElement).getPropertyValue('--chalk').trim()||'#fff';
+function burst(x,y,n,colors){
+  if(reduce)return;
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=1+Math.random()*(n>100?7:4);
+    parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2.5,l:60+Math.random()*50,r:1.5+Math.random()*3.2,c:colors[i%colors.length]})}
+  if(!raf)loop();
+}
+function loop(){
+  cx.clearRect(0,0,innerWidth,innerHeight);parts=parts.filter(p=>p.l>0);
+  for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.vy+=.13;p.vx*=.98;p.l--;cx.globalAlpha=Math.max(0,p.l/110);cx.fillStyle=p.c;cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);cx.fill()}
+  cx.globalAlpha=1;raf=parts.length?requestAnimationFrame(loop):0;if(!raf)cx.clearRect(0,0,innerWidth,innerHeight);
+}
+const colOf=el=>getComputedStyle(el).getPropertyValue('--c').trim();
+
+// 홀드 누르기 → 딱!
+route.addEventListener('click',e=>{
+  const b=e.target.closest('.blob');if(!b)return;
+  const art=b.parentElement,s=document.createElement('span');s.className='pop';s.textContent=['딱!','딱딱!','ㅋㅋ','딱!!'][Math.floor(Math.random()*4)];
+  art.appendChild(s);setTimeout(()=>s.remove(),750);
+  const r=b.getBoundingClientRect(),entry=b.closest('.entry');
+  burst(r.left+r.width/2,r.top+r.height/2,28,[chalkCol(),colOf(entry)]);
+});
+
+// 카드 기울이기 (마우스)
+if(!reduce&&matchMedia('(hover:hover)').matches){
+  route.addEventListener('pointermove',e=>{const tc=e.target.closest('.tc');if(!tc)return;const r=tc.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    tc.querySelector('.tc-in').style.transform=`rotateY(${x*14}deg) rotateX(${-y*14}deg)`;tc.style.setProperty('--hx',`${x*70}%`)});
+  route.addEventListener('pointerout',e=>{const tc=e.target.closest('.tc');if(tc&&!tc.contains(e.relatedTarget))tc.querySelector('.tc-in').style.transform=''});
+}
+
+// 발표 쇼: 6위 → 1위
+let timer=null;const show=document.getElementById('show'),stop=document.getElementById('stop');
+function clearLit(){document.querySelectorAll('.tc.lit').forEach(c=>c.classList.remove('lit'))}
+function end(){clearTimeout(timer);timer=null;clearLit();show.hidden=false;stop.hidden=true}
+show.addEventListener('click',()=>{
+  show.hidden=true;stop.hidden=false;let r=6;
+  const step=()=>{
+    clearLit();const en=document.getElementById('rank'+r),tc=en.querySelector('.tc');
+    tc.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});tc.classList.add('lit');
+    const rr=r;setTimeout(()=>{const b=tc.querySelector('.blob').getBoundingClientRect();
+      burst(b.left+b.width/2,b.top+b.height/2,rr===1?220:34,rr===1?[chalkCol(),getComputedStyle(document.documentElement).getPropertyValue('--gold').trim(),'#F0594C','#5B93F0']:[chalkCol(),colOf(en)])},550);
+    r--;timer=r>=1?setTimeout(step,r===1?3400:2600):setTimeout(end,6000);
+  };step();
+});
+stop.addEventListener('click',end);
+
+// 제목 「웃기냐」를 딱따구리처럼 쪼기
+const pw=document.getElementById('peckword');
+if(!reduce)pw.animate([{transform:'rotate(0)'},{transform:'rotate(-7deg)'},{transform:'rotate(0)'},{transform:'rotate(-7deg)'},{transform:'rotate(0)'}],{duration:560,delay:500,iterations:3,easing:'ease-out'});
+</script>
+
+</body></html>
