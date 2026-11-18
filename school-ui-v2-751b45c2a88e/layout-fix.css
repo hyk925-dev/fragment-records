@@ -1,0 +1,14 @@
+/* 같은 후보에서 준비/연습/결과가 바뀌어도 행동 버튼의 문서 위치를 유지한다. */
+body{word-break:keep-all;overflow-wrap:break-word}
+.yard svg{height:150px}
+.voice{min-height:76px;margin:10px 0 12px}
+.voice p{margin:2px 0}
+.finding>#difference{min-height:63px;margin:2px 0 6px}
+#score{display:block;min-height:68px;margin:0 0 10px;padding:10px 12px;background:#252e30;border-radius:8px}
+#score #result-line{font-size:1rem;min-height:0;margin:0;color:var(--muted)}
+#score[data-result=true] #result-line{color:var(--gold)}
+#score>small{display:block;font-size:.875rem;color:var(--muted)}
+.candidate .pick-mark{font-size:.875rem;font-weight:500;white-space:nowrap;color:var(--gold)}
+footer{justify-content:center;margin-top:10px}
+@media(max-width:360px){.yard svg{height:120px}.voice{min-height:76px}.finding>#difference{min-height:63px}}
+@media(min-width:600px){.yard svg{height:205px}}
