@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#11191b"><title>학당 · 맞대 보기</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="app">
+<header><a class="brand" href="#">열세 번째 달 <span>카두미르 학당</span></a><button id="reset" class="quiet">처음으로</button></header>
+<main>
+<div class="intro"><p class="eyebrow">영혼을 아는 시간</p><h1>바꾸기 전에,<br>맞대 보세요.</h1><p>내 영혼으로 다른 가능성을 살펴봅니다.<br>마음이 정해지기 전에는, 아무것도 잃지 않습니다.</p></div>
+<aside class="notice"><strong>조작해 보는 화면 시안</strong><span>Lv10 예시 캐릭터 · 실제 게임 기록과 연결되지 않습니다.</span></aside>
+<div class="workspace"><section class="choice" aria-labelledby="choice-title">
+<div class="section-head"><h2 id="choice-title">어떤 영혼을 바꿀까요?</h2><span class="badge">미리보기 무료</span></div>
+<p class="hint">이번 시안에서는 세 번째 영혼을 바꿔 볼 수 있습니다.</p>
+<div id="lineup" class="lineup"></div>
+<div class="candidate-heading"><h3>대신 끼워 볼 영혼</h3><span>지닌 영혼만</span></div>
+<div id="candidates" class="candidates" role="group" aria-label="세 번째 영혼 선택"></div>
+<p class="quiet-note">앞의 두 영혼은 그대로 둡니다. 후보를 누르면 아래 비교가 바뀝니다.</p>
+</section>
+<section class="comparison" aria-labelledby="change-title"><div class="section-head"><h2 id="change-title">달라지는 것</h2><span id="selected-grade" class="badge"></span></div>
+<div id="swap" class="swap"></div><div id="changes" aria-live="polite"></div>
+<div class="practice"><h3>두 조합으로 연습해 보기</h3><p>반격 없는 과녁에 기술을 한 번씩 사용합니다.<br>남은 차례는 일반 공격으로, 모두 열 턴입니다.</p><button id="practice" class="primary">두 조합 연습하기</button><p class="quiet-note">경험치와 전리품은 없습니다. 방어·생존 성능 비교는 아닙니다.</p></div>
+</section></div>
+<section id="results" class="results" hidden tabindex="-1" aria-labelledby="result-title"><div class="section-head"><div><p class="eyebrow">열 번의 연습</p><h2 id="result-title">결과를 나란히</h2></div><span class="badge">같은 연습 조건</span></div><p id="result-note"></p><div class="table-wrap"><table><caption class="sr">피해가 있는 차례의 최소, 중앙값, 최대 비교</caption><thead><tr><th scope="col">피해</th><th scope="col">현재 조합</th><th scope="col" id="result-name">교체 후</th></tr></thead><tbody id="summary"></tbody></table></div><p class="quiet-note">피해 없는 기술 차례는 위 수치에서 제외합니다. 중앙값은 평균 피해가 아닙니다.</p><details><summary>턴별 피해와 사용 기술</summary><div class="table-wrap"><table class="turns"><thead><tr><th>턴</th><th>현재</th><th>교체 후</th></tr></thead><tbody id="turns"></tbody></table></div></details><button class="secondary" id="record">이 연습 기록 보기</button><p class="quiet-note">이 시안의 기록은 열린 화면 안에서만 보며, 게임 도감에는 저장하지 않습니다.</p></section>
+<section class="decision" aria-labelledby="decision-title"><div><h2 id="decision-title">마음에 드는 조합인가요?</h2><p id="price"></p></div><button id="apply" class="secondary">적용 전 확인</button></section>
+<footer><p>학당 화면 시안 · Astra</p><details><summary>이 시안의 범위</summary><p>기존 학당 엔진으로 계산한 세 조합의 예시입니다. 실제 장착·가루 사용·게임 저장은 하지 않습니다. 영혼력과 재료는 비교에 충분한 값으로 둔 예시 캐릭터이며, 기존 beta 미리보기와 동일한 몸은 아닙니다. 후보를 바꾸면 앞선 결과는 닫히고 새로 연습할 수 있습니다.</p><p id="source"></p><a href="https://thirteenth-moon--beta-7exm16ox.web.app/?scene=%ED%95%99%EB%8B%B9" target="_blank" rel="noopener">기존 학당 화면과 비교</a></details></footer>
+</main></div>
+<dialog id="confirm"><form method="dialog"><p class="eyebrow">적용 전 마지막 확인</p><h2 id="confirm-title">이 조합으로 바꿀까요?</h2><p id="confirm-text"></p><p class="notice">이 화면은 시안입니다. 여기서는 실제 영혼이나 가루를 바꾸지 않습니다.</p><button class="primary">확인하고 돌아가기</button></form></dialog>
+<dialog id="record-dialog"><form method="dialog"><p class="eyebrow">이 화면의 연습 기록</p><h2>방금 비교한 짜임</h2><div id="record-text"></div><p class="quiet-note">본판 도감에 저장한 기록이 아닙니다.</p><button class="primary">닫기</button></form></dialog>
+<script type="module" src="app.js"></script></body></html>
