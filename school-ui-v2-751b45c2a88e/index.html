@@ -1,0 +1,18 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>학당 뒤뜰 · 화면 시안</title><meta name="theme-color" content="#17191e"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="layout-fix.css"></head><body><main>
+<header><div><small>카두미르</small><h1>학당의 뒤뜰</h1></div><button id="reset" class="small">처음으로</button></header>
+<p class="preview">화면 시안 · 게임 기록과 별개</p>
+<section class="yard" aria-label="무른 쇳돌 연습 과녁">
+<svg viewBox="0 0 480 200" role="img" aria-label="뒤뜰에 세운 쇳돌 과녁의 도식"><defs><linearGradient id="wall" x2="0" y2="1"><stop stop-color="#293038"/><stop offset="1" stop-color="#181e25"/></linearGradient><linearGradient id="metal" x2="1" y2="1"><stop stop-color="#879497"/><stop offset=".5" stop-color="#59696d"/><stop offset="1" stop-color="#28383d"/></linearGradient></defs><path fill="url(#wall)" d="M0 0h480v200H0z"/><g stroke="#414a50" opacity=".45"><path d="M0 35h480M0 78h480M0 120h480M65 0v35m110 0v43m120-78v35m100 0v43M45 78v42m210-42v42m180-42v42"/></g><path d="M0 157l480-22v65H0z" fill="#292c2c"/><path d="M0 195l480-40M0 170l410 30" stroke="#444642"/><ellipse cx="262" cy="177" rx="82" ry="12" fill="#11171b"/><g id="dummy"><path d="M238 62l40-3 18 82-17 11h-49l-11-13z" fill="url(#metal)" stroke="#9ba8a6"/><path d="M252 62l-8 66 35 24M230 139l50-64" stroke="#bdc4b6" opacity=".4"/><path d="M240 152v22m35-22v22" stroke="#626a68" stroke-width="12"/><path d="M228 174h61" stroke="#8b9084" stroke-width="5"/></g><path d="M43 126h58v9H43zm8 9h7v37h-7zm36 0h7v37h-7z" fill="#5d4c3d"/><path d="M47 121l34-8 15 10-35 9z" fill="#b9ad8a"/></svg>
+<div class="yard-label">무른 쇳돌 · 되치지 않는 과녁</div><div id="hit" class="hit" aria-hidden="true"></div>
+</section>
+<div class="voice"><span>학당 사람</span><p id="voice" aria-live="polite">「지닌 것끼리만 돼요. 없는 걸 끼워 보는 칸은 없어요.」</p></div>
+<section aria-label="영혼 짜임"><div class="section-line"><h2>끼워 보는 영혼</h2><span>세 번째 자리만 교체</span></div><div id="slots" class="slots"></div></section>
+<section class="finding" aria-labelledby="finding-title"><div class="section-line"><h2 id="finding-title">현재 짜임과 다른 점</h2><button id="details" class="text-button">자세히</button></div><p id="difference" aria-live="polite"></p><div id="score" aria-live="polite"><p id="result-line">과녁에 쳐 보면 기록이 남습니다.</p><small>피해·사용 기술은 ‘자세히’에서</small></div></section>
+<div class="actions"><button id="practice" class="primary">과녁에 열 번 쳐 보기</button><button id="apply" class="secondary">이 짜임으로 나가기</button></div><p id="cost" class="cost"></p>
+<footer><button id="scope" class="text-button">시안과 측정 범위</button></footer>
+</main>
+<dialog id="picker"><div class="sheet-heading"><h2>세 번째 자리에</h2><button data-close="picker">닫기</button></div><p>먼저 끼워 봅니다. 여기서는 가루가 들지 않습니다.</p><div id="candidates"></div></dialog>
+<dialog id="ledger"><div class="sheet-heading"><h2>비교한 기록</h2><button data-close="ledger">닫기</button></div><div id="ledger-body"></div></dialog>
+<dialog id="confirm"><div class="sheet-heading"><h2>나가기 전에</h2><button data-close="confirm">닫기</button></div><p id="confirmation"></p><p class="preview">시안에서는 실제 교체·가루 소비를 하지 않습니다.</p><button class="primary" data-close="confirm">확인하고 돌아가기</button></dialog>
+<dialog id="about"><div class="sheet-heading"><h2>이 뒤뜰에서 아는 것</h2><button data-close="about">닫기</button></div><p>반격 없는 과녁에 가능한 기술을 한 번씩 쓰고, 나머지는 일반 공격으로 총 열 턴을 계산한 예시입니다. 피해 없는 기술은 상세 기록에 따로 남깁니다. 방어·생존 능력이나 실제 적 상대의 우열은 재지 않습니다.</p><p>Lv10 예시 몸의 세 번째 영혼만 바꿉니다. v1과 같은 계산값이며 게임 저장과 연결되지 않습니다. 새로 열면 초기화됩니다. 공간 그림은 뒤뜰/쇳돌 설정을 표현한 임시 도식이며 완성 게임 원화가 아닙니다.</p><p>학당 사람의 입장/기록 대사는 기존 게임 문장을 사용했습니다. 연습 중 진행 문구는 측정 상태를 나타내는 시안 문구입니다.</p></dialog>
+<script type="module" src="app.js"></script></body></html>
